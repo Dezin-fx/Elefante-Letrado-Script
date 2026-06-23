@@ -7,7 +7,7 @@
 // @connect      openrouter.ai
 // ==/UserScript==
 
-import CONFIG from "./Config.js";
+const CONFIG = window.CONFIG;
 
 (function () {
   'use strict';
