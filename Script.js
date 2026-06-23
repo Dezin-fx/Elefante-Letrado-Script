@@ -5,10 +5,9 @@
 // @match        https://reader.elefanteletrado.com.br/*
 // @grant        GM_xmlhttpRequest
 // @connect      openrouter.ai
-// @require      https://raw.githubusercontent.com/user/repo/main/Config.js
+// @connect      raw.githubusercontent.com
+// @require      https://raw.githubusercontent.com/Dezin-fx/Elefante-Letrado-Automatico/main/Config.js
 // ==/UserScript==
-
-const CONFIG = window.CONFIG;
 
 (function () {
   'use strict';
@@ -19,16 +18,20 @@ const CONFIG = window.CONFIG;
 
   function init() {
 
+    if (!window.CONFIG) {
+      console.error("CONFIG não carregado");
+      return;
+    }
+    
+    const CONFIG = window.CONFIG;
+  
     const OPENROUTER_KEY = CONFIG.OPENROUTER_KEY;
-    const MODEL = 'cohere/north-mini-code:free';
-
+    const MODEL = CONFIG.MODEL;
+  
     const BOOK_TITLE = 'NOME DO LIVRO';
-
+  
     const BOOK_CONTEXT = `
 Aqui vc coloca caracteristicas, enredo, genero, tema e etc do livro
-
-Recomendo vc colocar coisas sobre o livro + ir no chatGPT ou na sua IA de preferencia, pedir um resumo completo do livro e colar aqui
-
 `;
 
     // ─── Auto-page ─────────────────────────────────────────────────
