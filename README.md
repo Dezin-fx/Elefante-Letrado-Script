@@ -28,7 +28,7 @@ Ele reduz ações manuais ao detectar atividades, extrair perguntas e gerar resp
 - Navegação automática entre páginas quando não há interação necessária  
 - Detecção de quizzes e perguntas na interface  
 - Extração automática de perguntas e alternativas
-- Geração de respostas utilizando IA (OpenRouter)  
+- Geração de respostas utilizando IA 
 - Uso de contexto do livro para melhorar a precisão das respostas  
 - Interface de controle injetada na página  
 - Sistema de auto-paginação  
