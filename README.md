@@ -6,7 +6,7 @@
 
 ## 📌 Sobre o projeto
 
-Este script automatiza interações na plataforma Elefante Letrado diretamente no navegador.
+Este script automatiza leitura e resolução de questões na plataforma Elefante Letrado diretamente no navegador.
 
 Ele reduz ações manuais ao detectar atividades, extrair perguntas e gerar respostas automaticamente com auxílio de IA
 
