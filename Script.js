@@ -87,9 +87,9 @@
         document.getElementById("apiKey").value.trim()
       );
     
-      alert("Configurações salvas.\nRecarregue a página.");
-    
+      alert("Configurações salvas.");
       location.reload();
+      
     };
     function setStatus(t, c = '#a6e3a1') {
       status.textContent = t;
@@ -304,16 +304,14 @@ Se não, escolha outra.
     }
 
     async function run() {
-      // Para o auto-page enquanto analisa
-      async function run() {
       if (!CONFIG.nomeLivro || !CONFIG.apiKey) {
-        setStatus('Configure o script', '#f38ba8');
-        result.textContent =
-          'Preencha o nome do livro e a API Key e clique em "Salvar configurações".';
-        return;
+      setStatus('Configure o script', '#f38ba8');
+      result.textContent =
+        'Preencha o nome do livro e a API Key e clique em "Salvar configurações".';
+      return;
       }
-
-  // resto do código...
+      
+      // Para o auto-page enquanto analisa
       const eraAtivo = autoPageActive;
       if (eraAtivo) stopAutoPage();
 
