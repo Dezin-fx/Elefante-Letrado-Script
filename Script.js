@@ -35,21 +35,27 @@
     // ─── Setup: Tela 1 — API Key ──────────────────────────────────
     function mostrarSetupApiKey() {
       renderPanel(`
-        <b style="color:#cba6f7;">🔑 Configuração</b>
-        <p style="margin:10px 0 6px;font-size:13px;">Cole sua API Key do OpenRouter:</p>
+        <b style="color:#cba6f7;font-size:16px;">🔑 Configuração</b>
+        <p style="margin:14px 0 8px;font-size:13px;color:#a6adc8;">Cole sua API Key do OpenRouter:</p>
         <input id="ea-inp" type="password" placeholder="sk-or-..."
-          style="width:100%;box-sizing:border-box;padding:8px;border:none;border-radius:6px;margin-bottom:6px;">
-        <div id="ea-err" style="color:#f38ba8;font-size:12px;min-height:16px;margin-bottom:6px;"></div>
-        <button id="ea-ok" style="width:100%;padding:8px;border:none;border-radius:8px;
-          background:#a6e3a1;color:#1e1e2e;font-weight:bold;cursor:pointer;margin-bottom:6px;">
-          Continuar
-        </button>
-        <button id="ea-noai" style="width:100%;padding:8px;border:none;border-radius:8px;
-          background:#313244;color:#cdd6f4;font-weight:bold;cursor:pointer;">
-          Não quero usar IA
-        </button>
+          style="
+            width:100%;box-sizing:border-box;padding:10px 12px;
+            border:2px solid #6c5fc7;border-radius:8px;margin-bottom:6px;
+            background:#11111b;color:#cdd6f4;font-family:monospace;font-size:13px;
+            outline:none;
+          ">
+        <div id="ea-err" style="color:#f38ba8;font-size:12px;min-height:18px;margin-bottom:10px;"></div>
+        <button id="ea-ok" style="
+          width:100%;padding:11px;border:none;border-radius:10px;
+          background:#a6e3a1;color:#1e1e2e;font-weight:bold;
+          font-size:14px;cursor:pointer;margin-bottom:8px;
+        ">Continuar</button>
+        <button id="ea-noai" style="
+          width:100%;padding:11px;border:none;border-radius:10px;
+          background:#313244;color:#cdd6f4;font-weight:bold;
+          font-size:14px;cursor:pointer;
+        ">Não quero usar IA</button>
       `);
-
       document.getElementById('ea-ok').onclick = () => {
         const key = document.getElementById('ea-inp').value.trim();
         if (!key) {
@@ -69,15 +75,21 @@
     // ─── Setup: Tela 2 — Nome do livro ───────────────────────────
     function mostrarSetupLivro(apiKey) {
       renderPanel(`
-        <b style="color:#cba6f7;">📘 Nome do livro</b>
-        <p style="margin:10px 0 6px;font-size:13px;">Qual livro você está lendo?</p>
+        <b style="color:#cba6f7;font-size:16px;">📘 Nome do livro</b>
+        <p style="margin:14px 0 8px;font-size:13px;color:#a6adc8;">Qual livro você está lendo?</p>
         <input id="ea-inp" type="text" placeholder="Ex: O Pequeno Príncipe"
-          style="width:100%;box-sizing:border-box;padding:8px;border:none;border-radius:6px;margin-bottom:6px;">
-        <div id="ea-err" style="color:#f38ba8;font-size:12px;min-height:16px;margin-bottom:6px;"></div>
-        <button id="ea-ok" style="width:100%;padding:8px;border:none;border-radius:8px;
-          background:#a6e3a1;color:#1e1e2e;font-weight:bold;cursor:pointer;">
-          Salvar e começar
-        </button>
+          style="
+            width:100%;box-sizing:border-box;padding:10px 12px;
+            border:2px solid #6c5fc7;border-radius:8px;margin-bottom:6px;
+            background:#11111b;color:#cdd6f4;font-family:monospace;font-size:13px;
+            outline:none;
+          ">
+        <div id="ea-err" style="color:#f38ba8;font-size:12px;min-height:18px;margin-bottom:10px;"></div>
+        <button id="ea-ok" style="
+          width:100%;padding:11px;border:none;border-radius:10px;
+          background:#a6e3a1;color:#1e1e2e;font-weight:bold;
+          font-size:14px;cursor:pointer;
+        ">Salvar e começar</button>
       `);
 
       document.getElementById('ea-ok').onclick = () => {
@@ -115,33 +127,33 @@
 
       // Monta a UI principal (botão de quiz só aparece se tiver apiKey)
       renderPanel(`
-        <b style="color:#cba6f7;">📘 ${bookTitle || 'Modo leitura'}</b>
-        <div id="ea-status" style="margin:8px 0;">Pronto</div>
-
+        <b style="color:#cba6f7;font-size:16px;">📘 ${bookTitle || 'Modo leitura'}</b>
+        <div id="ea-status" style="margin:10px 0;font-size:13px;color:#a6adc8;">Pronto</div>
+      
         <button id="ea-auto-btn" style="
-          width:100%;padding:8px;border:none;margin-bottom:6px;
-          border-radius:8px;background:#89b4fa;
-          font-weight:bold;cursor:pointer;color:#1e1e2e;
+          width:100%;padding:11px;border:none;margin-bottom:8px;
+          border-radius:10px;background:#89b4fa;
+          font-weight:bold;font-size:14px;cursor:pointer;color:#1e1e2e;
         ">▶ Iniciar Auto-Página</button>
-
+      
         ${apiKey ? `
         <button id="ea-btn" style="
-          width:100%;padding:8px;border:none;margin-bottom:6px;
-          border-radius:8px;background:#313244;
-          font-weight:bold;cursor:pointer;color:#cdd6f4;
+          width:100%;padding:11px;border:none;margin-bottom:8px;
+          border-radius:10px;background:#313244;
+          font-weight:bold;font-size:14px;cursor:pointer;color:#cdd6f4;
         ">🔍 Analisar Quiz Agora</button>
         ` : ''}
-
+      
         <div id="ea-result" style="
-          margin-top:10px;max-height:300px;
+          margin-top:8px;max-height:300px;
           overflow:auto;font-size:12px;
-          white-space:pre-wrap;
+          white-space:pre-wrap;color:#a6adc8;
         "></div>
-
+      
         <button id="ea-reset-btn" style="
-          width:100%;padding:6px;border:none;margin-top:10px;
-          border-radius:8px;background:#45475a;
-          font-size:11px;cursor:pointer;color:#cdd6f4;
+          width:100%;padding:10px;border:none;margin-top:12px;
+          border-radius:10px;background:#45475a;
+          font-size:13px;font-weight:bold;cursor:pointer;color:#cdd6f4;
         ">⚙ Reconfigurar</button>
       `);
 
