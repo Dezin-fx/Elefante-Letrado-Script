@@ -71,8 +71,8 @@
     // ─── Setup: Tela 2 — Nome do livro ───────────────────────────
     function mostrarSetupLivro(apiKey) {
       renderPanel(`
-        <b style="color:#cba6f7;font-size:16px;">📘 Nome do livro</b>
-        <p style="margin:14px 0 8px;font-size:14px;color:#a6adc8;">Qual livro você está lendo?</p>
+        <b style="color:#cba6f7;font-size:17px;">📘 Nome do livro</b>
+        <p style="margin:14px 0 8px;font-size:15px;color:#a6adc8;">Qual livro você está lendo?</p>
         <input id="ea-inp" type="text" placeholder="Ex: O Pequeno Príncipe"
           style="
             width:calc(100% - 4px);box-sizing:border-box;padding:10px 12px;
@@ -124,19 +124,21 @@
       // Monta a UI principal (botão de quiz só aparece se tiver apiKey)
       renderPanel(`
         <b style="color:#cba6f7;font-size:16px;">📘 ${bookTitle || 'Modo leitura'}</b>
-        <div id="ea-status" style="margin:10px 0;font-size:13px;color:#a6adc8;">Pronto</div>
+        <div id="ea-status" style="margin:12px 0;font-size:14px;color:#a6adc8;">Pronto</div>
 
         <button id="ea-auto-btn" style="
           width:100%;padding:11px;border:none;margin-bottom:8px;
           border-radius:10px;background:#89b4fa;
           font-weight:bold;font-size:14px;cursor:pointer;color:#1e1e2e;
+          transform:translateY(5px);
         ">▶ Iniciar Auto-Página</button>
 
         ${apiKey ? `
         <button id="ea-btn" style="
-          width:100%;padding:11px;border:none;margin-bottom:8px;
+          width:100%;padding:15px;border:none;margin-bottom:8px;
           border-radius:10px;background:#313244;
           font-weight:bold;font-size:14px;cursor:pointer;color:#cdd6f4;
+          transform:translateY(11px);
         ">🔍 Analisar Quiz Agora</button>
         ` : ''}
 
@@ -355,7 +357,7 @@ Se não, escolha outra.
       };
 
       setStatus(
-        apiKey ? 'Modo com IA ativa' : 'Modo de apenas leitura',
+        apiKey ? '🛈 Modo com IA ativa' : 'ⓘ Modo de apenas leitura',
         apiKey ? '#a6e3a1' : '#f9e2af'
       );
     }
