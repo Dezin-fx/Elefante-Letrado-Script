@@ -1,7 +1,6 @@
 // ==UserScript==
 // @name         Elefante Assistente de Estudo
 // @namespace    http://tampermonkey.net/
-// @version      2.0
 // @match        https://reader.elefanteletrado.com.br/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM_getValue
@@ -33,27 +32,21 @@
      const savedBook = GM_getValue('bookTitle', '');
      const noAI      = GM_getValue('noAI', false);
 
-     // Tenta pegar o nome do livro automaticamente da página
      const nomeAutomatico = document.querySelector('span.book-title')?.title?.trim() || '';
 
-     // Se achou o nome automaticamente, salva ele
      if (nomeAutomatico) {
          GM_setValue('bookTitle', nomeAutomatico);
      }
 
-     // Nome final: automático > salvo manualmente > vazio
      const bookTitle = nomeAutomatico || savedBook;
 
-     // Já foi configurado antes → pula o setup
      if (noAI || (savedKey && bookTitle)) {
          iniciarPrincipal(savedKey, noAI ? nomeAutomatico : bookTitle);
          return;
      }
 
+     mostrarSetupApiKey();
 
-      mostrarSetupApiKey();
-
-    // ─── Setup: Tela 1 — API Key ──────────────────────────────────
     function mostrarSetupApiKey() {
       renderPanel(`
         <b style="color:#cba6f7;font-size:16px;">🔑 Configuração</b>
@@ -89,7 +82,6 @@
       };
     }
 
-    // ─── Helper: cria ou substitui o conteúdo do painel ──────────
     function renderPanel(html) {
       let panel = document.getElementById('ea-panel');
       if (!panel) {
@@ -106,12 +98,13 @@
       panel.innerHTML = html;
     }
 
-    // ─── Principal ────────────────────────────────────────────────
     function iniciarPrincipal(apiKey, bookTitle) {
       let autoPageActive = false;
-      let autoPageTimer  = null;
+      let autoPageTimer = null;
+      let quizProcessando = false;
+      let observer = null;
+      let debounceTimer = null;
 
-      // Monta a UI principal (botão de quiz só aparece se tiver apiKey)
       renderPanel(`
         <b style="color:#cba6f7;font-size:16px;">📘 ${bookTitle || 'Modo leitura'}</b>
         <div id="ea-status" style="margin:12px 0;font-size:14px;color:#a6adc8;">Pronto</div>
@@ -148,7 +141,7 @@
       const statusEl = document.getElementById('ea-status');
       const resultEl = document.getElementById('ea-result');
       const autoBtn  = document.getElementById('ea-auto-btn');
-      const btn      = document.getElementById('ea-btn'); // null se sem IA
+      const btn      = document.getElementById('ea-btn');
       const resetBtn = document.getElementById('ea-reset-btn');
 
       function setStatus(t, c = '#a6e3a1') {
@@ -178,7 +171,8 @@
               key: 'ArrowRight', code: 'ArrowRight', bubbles: true
             }));
           }
-          autoPageTimer = setTimeout(tick, 150000);
+          const delay = Math.random() * (180000 - 120000) + 120000;
+          autoPageTimer = setTimeout(tick, delay);
         }
         tick();
       }
@@ -200,6 +194,15 @@
         const modal = getModal();
         if (!modal) return null;
 
+        // ── Dissertativa: detecta primeiro, antes de qualquer outra coisa ──
+        const textarea = modal.querySelector('textarea.form-control');
+        if (textarea) {
+          const pergunta = modal.querySelector('h6')?.innerText?.trim() || '';
+          if (pergunta) return { tipo: 'dissertativa', pergunta };
+          return null;
+        }
+
+        // ── Múltipla escolha ──
         const linhas = modal.innerText
           .replace(/\r/g, '')
           .split('\n')
@@ -209,7 +212,7 @@
             !/^quiz$/i.test(l) &&
             !/^x$/i.test(l) &&
             !/^[1-9]$/.test(l) &&
-            !/confirmar|voltar|próxima|proxima|continuar|biblioteca/i.test(l)
+            !/confirmar|voltar|próxima|proxima|continuar|biblioteca|analisar/i.test(l)
           );
 
         const opcoes = [];
@@ -231,14 +234,32 @@
 
         if (!pergunta || pergunta.toLowerCase() === 'quiz') return null;
 
-        return { pergunta, opcoes: opcoes.slice(0, 4) };
+        return { tipo: 'multipla', pergunta, opcoes: opcoes.slice(0, 4) };
       }
 
       // ─── Chamada IA ──────────────────────────────────────────────
       function perguntarIA(q) {
         return new Promise((resolve, reject) => {
-          const prompt = `
-Você é especialista no livro "${bookTitle}".
+          let prompt;
+
+          if (q.tipo === 'dissertativa') {
+            prompt = `Você é especialista no livro "${bookTitle}".
+Responda a pergunta abaixo em português, com entre 10 e 100 palavras. Seja direto e preciso.
+Responda apenas com o texto da resposta, sem introdução, sem "Resposta:", sem formatação extra.
+
+Pergunta: ${q.pergunta}
+
+REGRAS ABSOLUTAS:
+- Comece a resposta diretamente, sem introdução
+- Não use "Resposta:", "Claro!", "Aqui está" ou qualquer prefácio
+- Não use marcadores, listas ou formatação
+- Mínimo 10 palavras, máximo 80 palavras
+
+Exemplo de formato correto (não use este conteúdo, só o formato):
+"Percy foi enviado ao Acampamento Meio-Sangue porque descobriu ser filho de Poseidon e estava em perigo constante de monstros."`;
+}
+else {
+prompt = `Você é especialista no livro "${bookTitle}".
 
 Analise com extremo cuidado.
 
@@ -258,8 +279,8 @@ Explicação: [uma breve explicação em português]
 
 Não escreva nada antes de "Resposta:".
 Depois, verifique: "A resposta realmente responde a pergunta?"
-Se não, escolha outra.
-`;
+Se não, escolha outra.`;
+          }
 
           GM_xmlhttpRequest({
             method: 'POST',
@@ -292,6 +313,19 @@ Se não, escolha outra.
           });
         });
       }
+      function colarResposta(texto) {
+        const modal = getModal();
+        if (!modal) return;
+        const textarea = modal.querySelector('textarea.form-control');
+        if (!textarea) return;
+
+        const setter = Object.getOwnPropertyDescriptor(
+          window.HTMLTextAreaElement.prototype, 'value'
+        ).set;
+        setter.call(textarea, texto);
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        textarea.dispatchEvent(new Event('change', { bubbles: true }));
+      }
 
       // ─── Run ─────────────────────────────────────────────────────
       async function run() {
@@ -307,15 +341,24 @@ Se não, escolha outra.
           return;
         }
 
-        resultEl.textContent =
-          `Pergunta:\n${q.pergunta}\n\n` +
-          q.opcoes.map(o => `${o.letra}. ${o.texto}`).join('\n');
+        if (q.tipo === 'dissertativa') {
+          resultEl.textContent = `[Dissertativa]\nPergunta:\n${q.pergunta}\n\nAguardando IA...`;
+        }
+        else {
+          resultEl.textContent =
+            `Pergunta:\n${q.pergunta}\n\n` +
+            q.opcoes.map(o => `${o.letra}. ${o.texto}`).join('\n');
+        }
 
         try {
           setStatus('IA...', '#f9e2af');
           const r = await perguntarIA(q);
           setStatus('OK', '#a6e3a1');
           resultEl.textContent += `\n\n${r}`;
+
+          if (q.tipo === 'dissertativa') {
+              colarResposta(r.replace(/^[""\u201C\u201D''\u2018\u2019]+|[""\u201C\u201D''\u2018\u2019]+$/g, '').trim());
+          }
         } catch (e) {
           setStatus('Erro', '#f38ba8');
           resultEl.textContent = e.message;
