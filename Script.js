@@ -13,39 +13,43 @@
 
   const MODEL = 'cohere/north-mini-code:free';
 
+  // ─── Escopo externo: observer e debounceTimer declarados aqui ────────────────
+  let observer = null;
+  let debounceTimer = null;
+
   window.addEventListener('load', () => {
-      let tentativas = 0;
-      function aguardar() {
-          const achou = document.querySelector('span.book-title');
-          if (achou || tentativas >= 20) {
-              init();
-          } else {
-              tentativas++;
-              setTimeout(aguardar, 500);
-          }
+    let tentativas = 0;
+    function aguardar() {
+      const achou = document.querySelector('span.book-title');
+      if (achou || tentativas >= 20) {
+        init();
+      } else {
+        tentativas++;
+        setTimeout(aguardar, 500);
       }
-      setTimeout(aguardar, 1000);
+    }
+    setTimeout(aguardar, 1000);
   });
 
   function init() {
-     const savedKey  = GM_getValue('apiKey', '');
-     const savedBook = GM_getValue('bookTitle', '');
-     const noAI      = GM_getValue('noAI', false);
+    const savedKey  = GM_getValue('apiKey', '');
+    const savedBook = GM_getValue('bookTitle', '');
+    const noAI      = GM_getValue('noAI', false);
 
-     const nomeAutomatico = document.querySelector('span.book-title')?.title?.trim() || '';
+    const nomeAutomatico = document.querySelector('span.book-title')?.title?.trim() || '';
 
-     if (nomeAutomatico) {
-         GM_setValue('bookTitle', nomeAutomatico);
-     }
+    if (nomeAutomatico) {
+      GM_setValue('bookTitle', nomeAutomatico);
+    }
 
-     const bookTitle = nomeAutomatico || savedBook;
+    const bookTitle = nomeAutomatico || savedBook;
 
-     if (noAI || (savedKey && bookTitle)) {
-         iniciarPrincipal(savedKey, noAI ? nomeAutomatico : bookTitle);
-         return;
-     }
+    if (noAI || (savedKey && bookTitle)) {
+      iniciarPrincipal(savedKey, noAI ? nomeAutomatico : bookTitle);
+      return;
+    }
 
-     mostrarSetupApiKey();
+    mostrarSetupApiKey();
 
     function mostrarSetupApiKey() {
       renderPanel(`
@@ -53,7 +57,7 @@
         <p style="margin:14px 0 8px;font-size:14px;color:#a6adc8;">Cole sua API Key do OpenRouter:</p>
         <input id="ea-inp" type="password" placeholder="sk-or-..."
           style="
-              width:100%;box-sizing:border-box;padding:10px 12px;border:2px solid #6c5fc7;border-radius:8px;margin:0 0 6px 0;background:#11111b;color:#cdd6f4;font-family:monospace;font-size:14px;outline:none;display:block;transform:translateY(7px);">
+            width:100%;box-sizing:border-box;padding:10px 12px;border:2px solid #6c5fc7;border-radius:8px;margin:0 0 6px 0;background:#11111b;color:#cdd6f4;font-family:monospace;font-size:14px;outline:none;display:block;transform:translateY(7px);">
         <div id="ea-err" style="color:#f38ba8;font-size:12px;min-height:18px;margin-bottom:10px;"></div>
         <button id="ea-ok" style="
           width:100%;padding:11px;border:none;border-radius:10px;
@@ -66,182 +70,183 @@
           font-size:14px;cursor:pointer;
         ">Não quero usar IA</button>
       `);
+
       document.getElementById('ea-ok').onclick = () => {
-          const key = document.getElementById('ea-inp').value.trim();
-          if (!key) {
-              document.getElementById('ea-err').textContent = 'Insira uma API Key.';
-              return;
-          }
-          GM_setValue('apiKey', key);
-          iniciarPrincipal(key, nomeAutomatico);
+        const key = document.getElementById('ea-inp').value.trim();
+        if (!key) {
+          document.getElementById('ea-err').textContent = 'Insira uma API Key.';
+          return;
+        }
+        GM_setValue('apiKey', key);
+        iniciarPrincipal(key, nomeAutomatico);
       };
 
       document.getElementById('ea-noai').onclick = () => {
-          GM_setValue('noAI', true);
-          iniciarPrincipal('', nomeAutomatico);
+        GM_setValue('noAI', true);
+        iniciarPrincipal('', nomeAutomatico);
       };
     }
+  }
 
-    function renderPanel(html) {
-      let panel = document.getElementById('ea-panel');
-      if (!panel) {
-        panel = document.createElement('div');
-        panel.id = 'ea-panel';
-        panel.style.cssText = `
-          position:fixed;bottom:20px;right:20px;z-index:999999;
-          background:#1e1e2e;color:#cdd6f4;font-family:monospace;
-          border-radius:16px;padding:20px;box-shadow:0 8px 32px #0009;
-          width:400px;
-        `;
-        document.body.appendChild(panel);
-      }
-      panel.innerHTML = html;
+  function renderPanel(html) {
+    let panel = document.getElementById('ea-panel');
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.id = 'ea-panel';
+      panel.style.cssText = `
+        position:fixed;bottom:20px;right:20px;z-index:999999;
+        background:#1e1e2e;color:#cdd6f4;font-family:monospace;
+        border-radius:16px;padding:20px;box-shadow:0 8px 32px #0009;
+        width:400px;
+      `;
+      document.body.appendChild(panel);
+    }
+    panel.innerHTML = html;
+  }
+
+  function iniciarPrincipal(apiKey, bookTitle) {
+    let autoPageActive = false;
+    let autoPageTimer  = null;
+    let quizProcessando = false;
+
+    renderPanel(`
+      <b style="color:#cba6f7;font-size:16px;">📘 ${bookTitle || 'Modo leitura'}</b>
+      <div id="ea-status" style="margin:12px 0;font-size:14px;color:#a6adc8;">Pronto</div>
+
+      <button id="ea-auto-btn" style="
+        width:100%;padding:11px;border:none;margin-bottom:8px;
+        border-radius:10px;background:#89b4fa;
+        font-weight:bold;font-size:14px;cursor:pointer;color:#1e1e2e;
+        transform:translateY(5px);
+      ">▶ Iniciar Auto-Página</button>
+
+      ${apiKey ? `
+      <button id="ea-btn" style="
+        width:100%;padding:15px;border:none;margin-bottom:8px;
+        border-radius:10px;background:#313244;
+        font-weight:bold;font-size:14px;cursor:pointer;color:#cdd6f4;
+        transform:translateY(11px);
+      ">🔍 Analisar Quiz Agora</button>
+      ` : ''}
+
+      <div id="ea-result" style="
+        margin-top:8px;max-height:300px;
+        overflow:auto;font-size:12px;
+        white-space:pre-wrap;color:#a6adc8;
+      "></div>
+
+      <button id="ea-reset-btn" style="
+        width:100%;padding:10px;border:none;margin-top:12px;
+        border-radius:10px;background:#45475a;
+        font-size:13px;font-weight:bold;cursor:pointer;color:#cdd6f4;
+      ">⚙ Reconfigurar</button>
+    `);
+
+    const statusEl = document.getElementById('ea-status');
+    const resultEl = document.getElementById('ea-result');
+    const autoBtn  = document.getElementById('ea-auto-btn');
+    const btn      = document.getElementById('ea-btn');
+    const resetBtn = document.getElementById('ea-reset-btn');
+
+    function setStatus(t, c = '#a6e3a1') {
+      statusEl.textContent = t;
+      statusEl.style.color = c;
     }
 
-    function iniciarPrincipal(apiKey, bookTitle) {
-      let autoPageActive = false;
-      let autoPageTimer = null;
-      let quizProcessando = false;
+    // ─── Auto-page ───────────────────────────────────────────────────────────
+    function isQuizOpen() {
+      const modal = document.querySelector('ngb-modal-window.quiz-modal') ||
+                    document.querySelector('[role="dialog"]');
+      if (!modal) return false;
+      const buttons = [...modal.querySelectorAll('button')]
+        .map(b => b.textContent.trim())
+        .filter(t => t.length > 5 && !/confirmar|voltar|próxima|continuar/i.test(t));
+      return buttons.length >= 2;
+    }
 
-      renderPanel(`
-        <b style="color:#cba6f7;font-size:16px;">📘 ${bookTitle || 'Modo leitura'}</b>
-        <div id="ea-status" style="margin:12px 0;font-size:14px;color:#a6adc8;">Pronto</div>
-
-        <button id="ea-auto-btn" style="
-          width:100%;padding:11px;border:none;margin-bottom:8px;
-          border-radius:10px;background:#89b4fa;
-          font-weight:bold;font-size:14px;cursor:pointer;color:#1e1e2e;
-          transform:translateY(5px);
-        ">▶ Iniciar Auto-Página</button>
-
-        ${apiKey ? `
-        <button id="ea-btn" style="
-          width:100%;padding:15px;border:none;margin-bottom:8px;
-          border-radius:10px;background:#313244;
-          font-weight:bold;font-size:14px;cursor:pointer;color:#cdd6f4;
-          transform:translateY(11px);
-        ">🔍 Analisar Quiz Agora</button>
-        ` : ''}
-
-        <div id="ea-result" style="
-          margin-top:8px;max-height:300px;
-          overflow:auto;font-size:12px;
-          white-space:pre-wrap;color:#a6adc8;
-        "></div>
-
-        <button id="ea-reset-btn" style="
-          width:100%;padding:10px;border:none;margin-top:12px;
-          border-radius:10px;background:#45475a;
-          font-size:13px;font-weight:bold;cursor:pointer;color:#cdd6f4;
-        ">⚙ Reconfigurar</button>
-      `);
-
-      const statusEl = document.getElementById('ea-status');
-      const resultEl = document.getElementById('ea-result');
-      const autoBtn  = document.getElementById('ea-auto-btn');
-      const btn      = document.getElementById('ea-btn');
-      const resetBtn = document.getElementById('ea-reset-btn');
-
-      function setStatus(t, c = '#a6e3a1') {
-        statusEl.textContent = t;
-        statusEl.style.color = c;
-      }
-
-      // ─── Auto-page ───────────────────────────────────────────────
-      function isQuizOpen() {
-        const modal = document.querySelector('ngb-modal-window.quiz-modal') ||
-                      document.querySelector('[role="dialog"]');
-        if (!modal) return false;
-        const buttons = [...modal.querySelectorAll('button')]
-          .map(b => b.textContent.trim())
-          .filter(t => t.length > 5 && !/confirmar|voltar|próxima|continuar/i.test(t));
-        return buttons.length >= 2;
-      }
-
-      function startAutoPage() {
-        if (autoPageTimer) return;
-        autoPageActive = true;
-        setStatus('Navegando...', '#89b4fa');
-        function tick() {
-          if (!autoPageActive) return;
-          if (!isQuizOpen()) {
-            document.body.dispatchEvent(new KeyboardEvent('keydown', {
-              key: 'ArrowRight', code: 'ArrowRight', bubbles: true
-            }));
-          }
-          const delay = Math.random() * (180000 - 120000) + 120000;
-          autoPageTimer = setTimeout(tick, delay);
+    function startAutoPage() {
+      if (autoPageTimer) return;
+      autoPageActive = true;
+      setStatus('Navegando...', '#89b4fa');
+      function tick() {
+        if (!autoPageActive) return;
+        if (!isQuizOpen()) {
+          document.body.dispatchEvent(new KeyboardEvent('keydown', {
+            key: 'ArrowRight', code: 'ArrowRight', bubbles: true
+          }));
         }
-        tick();
+        const delay = Math.random() * (180000 - 120000) + 120000;
+        autoPageTimer = setTimeout(tick, delay);
+      }
+      tick();
+    }
+
+    function stopAutoPage() {
+      clearTimeout(autoPageTimer);
+      autoPageTimer = null;
+      autoPageActive = false;
+      setStatus('Pronto');
+    }
+
+    // ─── Extração do quiz ────────────────────────────────────────────────────
+    function getModal() {
+      return document.querySelector('ngb-modal-window.quiz-modal') ||
+             document.querySelector('[role="dialog"]');
+    }
+
+    function extrair() {
+      const modal = getModal();
+      if (!modal) return null;
+
+      // Dissertativa: detecta primeiro
+      const textarea = modal.querySelector('textarea.form-control');
+      if (textarea) {
+        const pergunta = modal.querySelector('h6')?.innerText?.trim() || '';
+        if (pergunta) return { tipo: 'dissertativa', pergunta };
+        return null;
       }
 
-      function stopAutoPage() {
-        clearTimeout(autoPageTimer);
-        autoPageTimer = null;
-        autoPageActive = false;
-        setStatus('Pronto');
-      }
+      // Múltipla escolha
+      const linhas = modal.innerText
+        .replace(/\r/g, '')
+        .split('\n')
+        .map(l => l.trim())
+        .filter(Boolean)
+        .filter(l =>
+          !/^quiz$/i.test(l) &&
+          !/^x$/i.test(l) &&
+          !/^[1-9]$/.test(l) &&
+          !/confirmar|voltar|próxima|proxima|continuar|biblioteca|analisar/i.test(l)
+        );
 
-      // ─── Extração do quiz ────────────────────────────────────────
-      function getModal() {
-        return document.querySelector('ngb-modal-window.quiz-modal') ||
-               document.querySelector('[role="dialog"]');
-      }
-
-      function extrair() {
-        const modal = getModal();
-        if (!modal) return null;
-
-        // ── Dissertativa: detecta primeiro, antes de qualquer outra coisa ──
-        const textarea = modal.querySelector('textarea.form-control');
-        if (textarea) {
-          const pergunta = modal.querySelector('h6')?.innerText?.trim() || '';
-          if (pergunta) return { tipo: 'dissertativa', pergunta };
-          return null;
+      const opcoes = [];
+      for (let i = 0; i < linhas.length; i++) {
+        const linha = linhas[i];
+        const match = linha.match(/^([A-D])\.\s*(.*)$/);
+        if (match) {
+          let texto = match[2].trim();
+          if (!texto && linhas[i + 1]) texto = linhas[i + 1].trim();
+          opcoes.push({ letra: match[1], texto });
         }
-
-        // ── Múltipla escolha ──
-        const linhas = modal.innerText
-          .replace(/\r/g, '')
-          .split('\n')
-          .map(l => l.trim())
-          .filter(Boolean)
-          .filter(l =>
-            !/^quiz$/i.test(l) &&
-            !/^x$/i.test(l) &&
-            !/^[1-9]$/.test(l) &&
-            !/confirmar|voltar|próxima|proxima|continuar|biblioteca|analisar/i.test(l)
-          );
-
-        const opcoes = [];
-
-        for (let i = 0; i < linhas.length; i++) {
-          const linha = linhas[i];
-          const match = linha.match(/^([A-D])\.\s*(.*)$/);
-          if (match) {
-            let texto = match[2].trim();
-            if (!texto && linhas[i + 1]) texto = linhas[i + 1].trim();
-            opcoes.push({ letra: match[1], texto });
-          }
-        }
-
-        if (opcoes.length < 2) return null;
-
-        const indexA = linhas.findIndex(l => /^A\./.test(l));
-        const pergunta = linhas.slice(0, indexA).join(' ').trim();
-
-        if (!pergunta || pergunta.toLowerCase() === 'quiz') return null;
-
-        return { tipo: 'multipla', pergunta, opcoes: opcoes.slice(0, 4) };
       }
 
-      // ─── Chamada IA ──────────────────────────────────────────────
-      function perguntarIA(q) {
-        return new Promise((resolve, reject) => {
-          let prompt;
+      if (opcoes.length < 2) return null;
 
-          if (q.tipo === 'dissertativa') {
-            prompt = `Você é especialista no livro "${bookTitle}".
+      const indexA = linhas.findIndex(l => /^A\./.test(l));
+      const pergunta = linhas.slice(0, indexA).join(' ').trim();
+
+      if (!pergunta || pergunta.toLowerCase() === 'quiz') return null;
+
+      return { tipo: 'multipla', pergunta, opcoes: opcoes.slice(0, 4) };
+    }
+
+    // ─── Chamada IA ──────────────────────────────────────────────────────────
+    function perguntarIA(q) {
+      return new Promise((resolve, reject) => {
+        let prompt;
+
+        if (q.tipo === 'dissertativa') {
+          prompt = `Você é especialista no livro "${bookTitle}".
 Responda a pergunta abaixo em português, com entre 10 e 100 palavras. Seja direto e preciso.
 Responda apenas com o texto da resposta, sem introdução, sem "Resposta:", sem formatação extra.
 
@@ -255,9 +260,8 @@ REGRAS ABSOLUTAS:
 
 Exemplo de formato correto (não use este conteúdo, só o formato):
 "Percy foi enviado ao Acampamento Meio-Sangue porque descobriu ser filho de Poseidon e estava em perigo constante de monstros."`;
-}
-else {
-prompt = `Você é especialista no livro "${bookTitle}".
+        } else {
+          prompt = `Você é especialista no livro "${bookTitle}".
 
 Analise com extremo cuidado.
 
@@ -278,120 +282,152 @@ Explicação: [uma breve explicação em português]
 Não escreva nada antes de "Resposta:".
 Depois, verifique: "A resposta realmente responde a pergunta?"
 Se não, escolha outra.`;
-          }
-
-          GM_xmlhttpRequest({
-            method: 'POST',
-            url: 'https://openrouter.ai/api/v1/chat/completions',
-            headers: {
-              Authorization: `Bearer ${apiKey}`,
-              'Content-Type': 'application/json'
-            },
-            data: JSON.stringify({
-              model: MODEL,
-              messages: [
-                {
-                  role: 'system',
-                  content: 'Responda sempre em português do Brasil. Não dê tantos detalhes. Responda somente no formato pedido.'
-                },
-                { role: 'user', content: prompt }
-              ],
-              temperature: 0
-            }),
-            onload: res => {
-              try {
-                const data = JSON.parse(res.responseText);
-                const txt = data.choices?.[0]?.message?.content;
-                resolve(txt);
-              } catch {
-                reject(new Error('Erro IA'));
-              }
-            },
-            onerror: () => reject(new Error('Erro rede'))
-          });
-        });
-      }
-      function colarResposta(texto) {
-        const modal = getModal();
-        if (!modal) return;
-        const textarea = modal.querySelector('textarea.form-control');
-        if (!textarea) return;
-
-        const setter = Object.getOwnPropertyDescriptor(
-          window.HTMLTextAreaElement.prototype, 'value'
-        ).set;
-        setter.call(textarea, texto);
-        textarea.dispatchEvent(new Event('input', { bubbles: true }));
-        textarea.dispatchEvent(new Event('change', { bubbles: true }));
-      }
-
-      // ─── Run ─────────────────────────────────────────────────────
-      async function run() {
-        const eraAtivo = autoPageActive;
-        if (eraAtivo) stopAutoPage();
-
-        setStatus('Lendo...', '#89b4fa');
-        const q = extrair();
-
-        if (!q) {
-          setStatus('Não achei', '#f38ba8');
-          if (eraAtivo) startAutoPage();
-          return;
         }
+
+        GM_xmlhttpRequest({
+          method: 'POST',
+          url: 'https://openrouter.ai/api/v1/chat/completions',
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          },
+          data: JSON.stringify({
+            model: MODEL,
+            messages: [
+              {
+                role: 'system',
+                content: 'Responda sempre em português do Brasil. Não dê tantos detalhes. Responda somente no formato pedido.'
+              },
+              { role: 'user', content: prompt }
+            ],
+            temperature: 0
+          }),
+          onload: res => {
+            try {
+              const data = JSON.parse(res.responseText);
+              const txt = data.choices?.[0]?.message?.content;
+              resolve(txt);
+            } catch {
+              reject(new Error('Erro IA'));
+            }
+          },
+          onerror: () => reject(new Error('Erro rede'))
+        });
+      });
+    }
+
+    function colarResposta(texto) {
+      const modal = getModal();
+      if (!modal) return;
+      const textarea = modal.querySelector('textarea.form-control');
+      if (!textarea) return;
+
+      const setter = Object.getOwnPropertyDescriptor(
+        window.HTMLTextAreaElement.prototype, 'value'
+      ).set;
+      setter.call(textarea, texto);
+      textarea.dispatchEvent(new Event('input', { bubbles: true }));
+      textarea.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+
+    // ─── Run ─────────────────────────────────────────────────────────────────
+    async function run() {
+      if (quizProcessando) return;
+      quizProcessando = true;
+
+      // Para o observer enquanto o script escreve no DOM — evita loop
+      if (observer) observer.disconnect();
+
+      const eraAtivo = autoPageActive;
+      if (eraAtivo) stopAutoPage();
+
+      setStatus('Lendo...', '#89b4fa');
+      const q = extrair();
+
+      if (!q) {
+        setStatus('Não achei', '#f38ba8');
+        quizProcessando = false;
+        if (observer) observer.observe(document.body, { childList: true, subtree: true });
+        if (eraAtivo) startAutoPage();
+        return;
+      }
+
+      if (q.tipo === 'dissertativa') {
+        resultEl.textContent = `[Dissertativa]\nPergunta:\n${q.pergunta}\n\nAguardando IA...`;
+      } else {
+        resultEl.textContent =
+          `Pergunta:\n${q.pergunta}\n\n` +
+          q.opcoes.map(o => `${o.letra}. ${o.texto}`).join('\n');
+      }
+
+      try {
+        setStatus('IA...', '#f9e2af');
+        const r = await perguntarIA(q);
+        setStatus('OK', '#a6e3a1');
+        resultEl.textContent += `\n\n${r}`;
 
         if (q.tipo === 'dissertativa') {
-          resultEl.textContent = `[Dissertativa]\nPergunta:\n${q.pergunta}\n\nAguardando IA...`;
+          colarResposta(r.replace(/^[""\u201C\u201D''\u2018\u2019]+|[""\u201C\u201D''\u2018\u2019]+$/g, '').trim());
         }
-        else {
-          resultEl.textContent =
-            `Pergunta:\n${q.pergunta}\n\n` +
-            q.opcoes.map(o => `${o.letra}. ${o.texto}`).join('\n');
-        }
-
-        try {
-          setStatus('IA...', '#f9e2af');
-          const r = await perguntarIA(q);
-          setStatus('OK', '#a6e3a1');
-          resultEl.textContent += `\n\n${r}`;
-
-          if (q.tipo === 'dissertativa') {
-              colarResposta(r.replace(/^[""\u201C\u201D''\u2018\u2019]+|[""\u201C\u201D''\u2018\u2019]+$/g, '').trim());
-          }
-        } catch (e) {
-          setStatus('Erro', '#f38ba8');
-          resultEl.textContent = e.message;
-        }
-
-        if (eraAtivo) startAutoPage();
+      } catch (e) {
+        setStatus('Erro', '#f38ba8');
+        resultEl.textContent = e.message;
       }
 
-      // ─── Botões ──────────────────────────────────────────────────
-      autoBtn.addEventListener('click', () => {
-        if (autoPageActive) {
-          stopAutoPage();
-          autoBtn.textContent = '▶ Iniciar Auto-Página';
-          autoBtn.style.background = '#89b4fa';
-        } else {
-          startAutoPage();
-          autoBtn.textContent = '⏹ Parar';
-          autoBtn.style.background = '#f38ba8';
-        }
-      });
-
-      if (btn) btn.onclick = run;
-
-      resetBtn.onclick = () => {
-        stopAutoPage();
-        GM_setValue('apiKey', '');
-        GM_setValue('bookTitle', '');
-        GM_setValue('noAI', false);
-        init();
-      };
-
-      setStatus(
-        apiKey ? '🛈 Modo com IA ativa' : 'ⓘ Modo de apenas leitura',
-        apiKey ? '#a6e3a1' : '#f9e2af'
-      );
+      quizProcessando = false;
+      // Reconecta o observer só depois que o script terminou de mexer no DOM
+      if (observer) observer.observe(document.body, { childList: true, subtree: true });
+      if (eraAtivo) startAutoPage();
     }
+
+    // ─── Botões ──────────────────────────────────────────────────────────────
+    autoBtn.addEventListener('click', () => {
+      if (autoPageActive) {
+        stopAutoPage();
+        autoBtn.textContent = '▶ Iniciar Auto-Página';
+        autoBtn.style.background = '#89b4fa';
+      } else {
+        startAutoPage();
+        autoBtn.textContent = '⏹ Parar';
+        autoBtn.style.background = '#f38ba8';
+      }
+    });
+
+    if (btn) btn.onclick = run;
+
+    resetBtn.onclick = () => {
+      stopAutoPage();
+      GM_setValue('apiKey', '');
+      GM_setValue('bookTitle', '');
+      GM_setValue('noAI', false);
+      if (observer) { observer.disconnect(); observer = null; }
+      clearTimeout(debounceTimer);
+      init();
+    };
+
+    // ─── MutationObserver ────────────────────────────────────────────────────
+    setStatus(
+      apiKey ? '🛈 Modo com IA ativa' : 'ⓘ Modo de apenas leitura',
+      apiKey ? '#a6e3a1' : '#f9e2af'
+    );
+
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+
+    observer = new MutationObserver(() => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        if (!apiKey) return;
+        if (quizProcessando) return;
+        if (!extrair()) return;
+        stopAutoPage();
+        run();
+      }, 300);
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
   }
+
 })();
