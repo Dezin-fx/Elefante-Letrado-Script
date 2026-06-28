@@ -102,8 +102,6 @@
       let autoPageActive = false;
       let autoPageTimer = null;
       let quizProcessando = false;
-      let observer = null;
-      let debounceTimer = null;
 
       renderPanel(`
         <b style="color:#cba6f7;font-size:16px;">📘 ${bookTitle || 'Modo leitura'}</b>
