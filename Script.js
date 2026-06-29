@@ -13,7 +13,6 @@
 
   const MODEL = 'cohere/north-mini-code:free';
 
-  // ─── Escopo externo: observer e debounceTimer declarados aqui ────────────────
   let observer = null;
   let debounceTimer = null;
 
@@ -157,6 +156,8 @@
     function startAutoPage() {
       if (autoPageTimer) return;
       autoPageActive = true;
+      autoBtn.textContent = '⏹ Parar';
+      autoBtn.style.background = '#f38ba8';
       setStatus('Navegando...', '#89b4fa');
       function tick() {
         if (!autoPageActive) return;
@@ -175,20 +176,34 @@
       clearTimeout(autoPageTimer);
       autoPageTimer = null;
       autoPageActive = false;
+      autoBtn.textContent = apiKey ? '▶ Iniciar' : '▶ Iniciar Auto-Página';
+      autoBtn.style.background = '#89b4fa';
       setStatus('Pronto');
     }
 
-    // ─── Extração do quiz ────────────────────────────────────────────────────
+    // ─── Modal ───────────────────────────────────────────────────────────────
     function getModal() {
       return document.querySelector('ngb-modal-window.quiz-modal') ||
              document.querySelector('[role="dialog"]');
     }
 
+    // ─── Tela final ──────────────────────────────────────────────────────────
+    function detectarTelaFinal() {
+      const modal = getModal();
+      if (!modal) return null;
+      // Tela final: só existe button.fund2-button sem .w-50
+      const todosFund2 = [...modal.querySelectorAll('button.fund2-button')];
+      if (todosFund2.length === 0) return null;
+      const temW50 = todosFund2.some(b => b.classList.contains('w-50'));
+      if (temW50) return null; // ainda é tela de quiz normal
+      return todosFund2.find(b => b.textContent.includes('Continuar')) || null;
+    }
+
+    // ─── Extração do quiz ────────────────────────────────────────────────────
     function extrair() {
       const modal = getModal();
       if (!modal) return null;
 
-      // Dissertativa: detecta primeiro
       const textarea = modal.querySelector('textarea.form-control');
       if (textarea) {
         const pergunta = modal.querySelector('h6')?.innerText?.trim() || '';
@@ -196,7 +211,6 @@
         return null;
       }
 
-      // Múltipla escolha
       const linhas = modal.innerText
         .replace(/\r/g, '')
         .split('\n')
@@ -281,50 +295,45 @@ Se não, escolha outra.`;
 
         const requestPromise = new Promise((res, rej) => {
           GM_xmlhttpRequest({
-          method: 'POST',
-          url: 'https://openrouter.ai/api/v1/chat/completions',
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            'Content-Type': 'application/json'
-          },
-          data: JSON.stringify({
-            model: MODEL,
-            messages: [
-              {
-                role: 'system',
-                content: 'Responda sempre em português do Brasil. Não dê tantos detalhes. Responda somente no formato pedido.'
-              },
-              { role: 'user', content: prompt }
-            ],
-            temperature: 0
-          }),
-          onload: r => {
-            try {
-              const data = JSON.parse(r.responseText);
-              if (data.error) {
-                rej(new Error(`API: ${data.error.message}`));
-                return;
+            method: 'POST',
+            url: 'https://openrouter.ai/api/v1/chat/completions',
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              'Content-Type': 'application/json'
+            },
+            data: JSON.stringify({
+              model: MODEL,
+              messages: [
+                {
+                  role: 'system',
+                  content: 'Responda sempre em português do Brasil. Não dê tantos detalhes. Responda somente no formato pedido.'
+                },
+                { role: 'user', content: prompt }
+              ],
+              temperature: 0
+            }),
+            onload: r => {
+              try {
+                const data = JSON.parse(r.responseText);
+                if (data.error) { rej(new Error(`API: ${data.error.message}`)); return; }
+                const txt = data.choices?.[0]?.message?.content;
+                if (!txt) { rej(new Error('Resposta vazia da IA')); return; }
+                res(txt);
+              } catch {
+                rej(new Error('Erro ao processar resposta da IA'));
               }
-              const txt = data.choices?.[0]?.message?.content;
-              if (!txt) {
-                rej(new Error('Resposta vazia da IA'));
-                return;
-              }
-              res(txt);
-            } catch {
-              rej(new Error('Erro ao processar resposta da IA'));
-            }
-          },
-          onerror: () => rej(new Error('Erro rede'))
-        });
+            },
+            onerror: () => rej(new Error('Erro rede'))
+          });
         });
 
         Promise.race([requestPromise, timeoutPromise])
           .then(result => { clearTimeout(timeoutId); resolve(result); })
-          .catch(err  => { clearTimeout(timeoutId); reject(err); });
+          .catch(err   => { clearTimeout(timeoutId); reject(err); });
       });
     }
 
+    // ─── Dissertativa ────────────────────────────────────────────────────────
     function colarResposta(texto) {
       const modal = getModal();
       if (!modal) return;
@@ -347,18 +356,14 @@ Se não, escolha outra.`;
           if (!modal) { clearInterval(intervalo); resolve(null); return; }
 
           const btn = [...modal.querySelectorAll('button')]
-            .find(b => b.textContent.trim().includes(textoBotao) && !b.disabled && !b.classList.contains('disabled'));
+            .find(b =>
+              b.textContent.trim().includes(textoBotao) &&
+              !b.disabled &&
+              !b.classList.contains('disabled')
+            );
 
-          if (btn) {
-            clearInterval(intervalo);
-            resolve(btn);
-            return;
-          }
-
-          if (Date.now() - inicio > timeoutMs) {
-            clearInterval(intervalo);
-            resolve(null);
-          }
+          if (btn) { clearInterval(intervalo); resolve(btn); return; }
+          if (Date.now() - inicio > timeoutMs) { clearInterval(intervalo); resolve(null); }
         }, 200);
       });
     }
@@ -370,7 +375,6 @@ Se não, escolha outra.`;
       btnAnalisar.click();
 
       setStatus('Aguardando resultado...', '#cba6f7');
-      // Aguarda o botão principal (fund2-button w-50) ficar habilitado — vira "Próxima Pergunta"
       const btnProxima = await new Promise((resolve) => {
         const inicio = Date.now();
         const intervalo = setInterval(() => {
@@ -392,7 +396,6 @@ Se não, escolha outra.`;
       if (quizProcessando) return;
       quizProcessando = true;
 
-      // Para o observer enquanto o script escreve no DOM — evita loop
       if (observer) observer.disconnect();
 
       const eraAtivo = autoPageActive;
@@ -446,7 +449,6 @@ Se não, escolha outra.`;
         resultEl.textContent = e.message;
       } finally {
         quizProcessando = false;
-        // Observer reconectado aqui — confirmarDissertativa já terminou antes do finally
         if (observer) observer.observe(document.body, { childList: true, subtree: true });
         if (eraAtivo) startAutoPage();
       }
@@ -456,15 +458,10 @@ Se não, escolha outra.`;
     autoBtn.addEventListener('click', () => {
       if (autoPageActive) {
         stopAutoPage();
-        autoBtn.textContent = apiKey ? '▶ Iniciar' : '▶ Iniciar Auto-Página';
-        autoBtn.style.background = '#89b4fa';
       } else {
         startAutoPage();
-        autoBtn.textContent = '⏹ Parar';
-        autoBtn.style.background = '#f38ba8';
       }
     });
-
 
     resetBtn.onclick = () => {
       stopAutoPage();
@@ -490,8 +487,24 @@ Se não, escolha outra.`;
     observer = new MutationObserver(() => {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
-        if (!apiKey) return;
         if (quizProcessando) return;
+
+        // Tela final tem prioridade — independe de apiKey
+        const continuarBtn = detectarTelaFinal();
+        if (continuarBtn) {
+          continuarBtn.click();
+          // Aguarda modal fechar, então retoma auto-página
+          const esperarFechar = setInterval(() => {
+            if (!getModal()) {
+              clearInterval(esperarFechar);
+              startAutoPage();
+            }
+          }, 300);
+          return;
+        }
+
+        // Quiz normal só roda com IA ativa
+        if (!apiKey) return;
         if (!extrair()) return;
         stopAutoPage();
         run();
