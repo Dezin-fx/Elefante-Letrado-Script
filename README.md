@@ -48,9 +48,9 @@ O script foi desenvolvido para utilização com o **Tampermonkey**.
 
 Disponível para:
 
-- Google Chrome
-- Mozilla Firefox
-- Microsoft Edge
+- [Google Chrome](https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)
+- [Mozilla Firefox](https://addons.mozilla.org/firefox/addon/tampermonkey/)
+- [Microsoft Edge](https://microsoftedge.microsoft.com/addons/detail/tampermonkey/iikmkjmpaadaobahmlepeloendndfphd)
 
 ## 2. Adicione o script
 
@@ -104,28 +104,14 @@ Essas configurações ficam armazenadas localmente pelo Tampermonkey.
 
 ---
 
-# Reconfiguração
-
-O botão **Reconfigurar** restaura a configuração inicial do script.
-
-Ao utilizá-lo serão removidos:
-
-- API Key armazenada;
-- Nome do livro salvo;
-- Configuração de modo sem IA.
-
-Na próxima execução o painel de configuração inicial será exibido novamente.
-
----
-
 # 🔑 API utilizada
 
-Quando desejado, o script pode utilizar a API da **OpenRouter**.
+Quando desejado, o script utiliza a API da [OpenRouter](https://openrouter.ai).
 
 ## Para utilizar IA:
 
-1. Crie uma conta no OpenRouter.
-2. Gere uma API Key.
+1. Crie uma conta no [OpenRouter](https://openrouter.ai).
+2. Gere uma API Key em [OpenRouter Key](https://openrouter.ai/workspaces/default/keys).
 3. Na primeira execução do script, cole a chave quando o painel solicitar.
 
 A API Key fica armazenada apenas localmente pelo Tampermonkey e pode ser alterada ou removida a qualquer momento através da opção de reconfiguração do script.
