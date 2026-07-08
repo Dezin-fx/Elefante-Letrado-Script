@@ -11,7 +11,24 @@
 (function () {
   'use strict';
 
-  const MODEL = 'cohere/north-mini-code:free';
+  const MODELO_PADRAO = 'cohere/north-mini-code:free';
+
+  // Lista curada — propósito geral (raciocínio/escrita), não coder/rerank/safety.
+  // Atenção: catálogo free do OpenRouter rotaciona; confirme em openrouter.ai/models
+  // antes de assumir que um slug ainda está ativo.
+  const MODELOS_CURADOS = [
+    { label: 'Cohere: North Mini Code (free)', value: 'cohere/north-mini-code:free' },
+    { label: 'OpenAI: gpt-oss-120b (free)', value: 'openai/gpt-oss-120b:free' },
+    { label: 'Meta: Llama 3.3 70B Instruct (free) — instável no momento', value: 'meta-llama/llama-3.3-70b-instruct:free' },
+    { label: 'Outro (digitar manualmente)', value: '__custom__' }
+  ];
+
+  // ─── Chaves GM ───────────────────────────────────────────────────────────────
+  // autoMinMin : intervalo mínimo de auto-página em minutos (default 2)
+  // autoMaxMin : intervalo máximo de auto-página em minutos (default 3)
+  // Limites de segurança: mín 0,5 min (30s) · máx 60 min (1h)
+  const AUTO_MIN_DEFAULT = 2;
+  const AUTO_MAX_DEFAULT = 3;
 
   let observer = null;
   let debounceTimer = null;
@@ -29,6 +46,10 @@
     }
     setTimeout(aguardar, 1000);
   });
+
+  function getModeloAtual() {
+    return GM_getValue('selectedModel', MODELO_PADRAO);
+  }
 
   function init() {
     const savedKey  = GM_getValue('apiKey', '');
@@ -56,12 +77,12 @@
         <p style="margin:14px 0 8px;font-size:14px;color:#a6adc8;">Cole sua API Key do OpenRouter:</p>
         <input id="ea-inp" type="password" placeholder="sk-or-..."
           style="
-            width:100%;box-sizing:border-box;padding:10px 12px;border:2px solid #6c5fc7;border-radius:8px;margin:0 0 6px 0;background:#11111b;color:#cdd6f4;font-family:monospace;font-size:14px;outline:none;display:block;transform:translateY(7px);">
-        <div id="ea-err" style="color:#f38ba8;font-size:12px;min-height:18px;margin-bottom:10px;"></div>
+            width:100%;box-sizing:border-box;padding:10px 12px;border:2px solid #6c5fc7;border-radius:8px;margin:0 0 6px 0;background:#11111b;color:#cdd6f4;font-family:monospace;font-size:14px;outline:none;display:block;transform:translateY(-7px);text-align:left;">
+        <div id="ea-err" style="display:none;color:#f38ba8;font-size:12px;margin-top:3px;transform:translateY(-7px);"></div>
         <button id="ea-ok" style="
           width:100%;padding:11px;border:none;border-radius:10px;
           background:#a6e3a1;color:#1e1e2e;font-weight:bold;
-          font-size:14px;cursor:pointer;margin-bottom:8px;
+          font-size:14px;cursor:pointer;
         ">Continuar</button>
         <button id="ea-noai" style="
           width:100%;padding:11px;border:none;border-radius:10px;
@@ -73,7 +94,9 @@
       document.getElementById('ea-ok').onclick = () => {
         const key = document.getElementById('ea-inp').value.trim();
         if (!key) {
-          document.getElementById('ea-err').textContent = 'Insira uma API Key.';
+          const err = document.getElementById('ea-err');
+          err.style.display = 'block';
+          err.textContent = 'Insira uma API Key.';
           return;
         }
         GM_setValue('apiKey', key);
@@ -96,11 +119,167 @@
         position:fixed;bottom:20px;right:20px;z-index:999999;
         background:#1e1e2e;color:#cdd6f4;font-family:monospace;
         border-radius:16px;padding:20px;box-shadow:0 8px 32px #0009;
-        width:400px;
+        width:360px;max-width:calc(100vw - 40px);
+        display:flex;flex-direction:column;gap:12px;
       `;
       document.body.appendChild(panel);
     }
     panel.innerHTML = html;
+  }
+
+  // ─── Painel de configuração (engrenagem) ─────────────────────────────────────
+  // Contém: seleção de modelo + intervalo de auto-página.
+  function abrirConfigModelo(onVoltar) {
+    const modeloSalvo  = getModeloAtual();
+    const ehCurado     = MODELOS_CURADOS.some(m => m.value === modeloSalvo);
+    const autoMinSalvo = GM_getValue('autoMinMin', AUTO_MIN_DEFAULT);
+    const autoMaxSalvo = GM_getValue('autoMaxMin', AUTO_MAX_DEFAULT);
+
+    const optionsHtml = MODELOS_CURADOS.map(m => {
+      const selected = (m.value === modeloSalvo) ? 'selected' : '';
+      return `<option value="${m.value}" ${selected}>${m.label}</option>`;
+    }).join('');
+
+    renderPanel(`
+      <div style="display:flex;flex-direction:column;align-items:center;">
+
+        <b style="color:#cba6f7;font-size:16px;">⚙ Configurações</b>
+
+        <!-- ── Modelo ── -->
+        <p style="
+          margin:14px 0 6px;font-size:15px;color:#a6adc8;
+          width:100%;text-align:left;
+        ">Modelo de IA:</p>
+
+        <select id="ea-model-select" style="
+          width:100%;box-sizing:border-box;padding:9px 10px;border:2px solid #45475a;border-radius:8px;
+          background:#11111b;color:#cdd6f4;font-family:monospace;font-size:13px;margin-bottom:8px;
+          display:block;text-align:center;text-align-last:center;
+        ">
+          ${optionsHtml}
+        </select>
+
+        <input id="ea-model-custom" type="text" placeholder="provider/nome-do-modelo:free"
+          value="${ehCurado ? '' : modeloSalvo}"
+          style="
+            width:100%;box-sizing:border-box;padding:9px 10px;border:2px solid #45475a;border-radius:8px;
+            background:#11111b;color:#89b4fa;font-family:Inter,sans-serif;font-size:12px;margin-bottom:6px;
+            display:${ehCurado ? 'none' : 'block'};text-align:left;
+          ">
+
+        <div style="font-size:11px;color:#6c7086;margin-bottom:4px;width:100%;text-align:left;">
+          Mais modelos em:
+          <a href="https://openrouter.ai/models" target="_blank"
+             style="color:#89b4fa;text-decoration:none;">openrouter.ai/models</a>
+        </div>
+
+        <!-- ── Divider ── -->
+        <div style="width:100%;border-top:1px solid #313244;margin:14px 0;"></div>
+
+        <!-- ── Intervalo de auto-página ── -->
+        <p style="
+          margin:0 0 8px;font-size:15px;color:#a6adc8;
+          width:100%;text-align:left;
+          transform:translateY(4px);
+        ">Intervalo de auto-página (minutos):</p>
+
+        <div style="display:flex;align-items:center;gap:10px;width:100%;margin-bottom:4px;">
+          <input id="ea-min-input" type="text" inputmode="decimal"
+          placeholder="${AUTO_MIN_DEFAULT}" value="${autoMinSalvo}"
+          style="
+            flex:1 1 0;min-width:0;height:48px;padding:0 12px;border:2px solid #45475a;border-radius:8px;
+            background:#11111b;color:#cdd6f4;font-family:Inter,sans-serif;font-size:15px;
+            font-weight:500;line-height:48px;text-align:center;box-sizing:border-box;outline:none;
+          ">
+          <span style="color:#a6adc8;font-size:15px;flex-shrink:0;">a</span>
+          <input id="ea-max-input" type="text" inputmode="decimal"
+            placeholder="${AUTO_MAX_DEFAULT}" value="${autoMaxSalvo}"
+            style="
+              flex:1 1 0;min-width:0;height:48px;padding:0 12px;border:2px solid #45475a;border-radius:8px;
+              background:#11111b;color:#cdd6f4;font-family:Inter,sans-serif;font-size:15px;
+              font-weight:500;line-height:48px;text-align:center;box-sizing:border-box;outline:none;
+            ">
+        </div>
+
+        <div id="ea-interval-err"
+          style="color:#f38ba8;font-size:12px;min-height:0;margin-bottom:2px;width:100%;transform: translateY(-5px);"></div>
+
+        <!-- ── Ações ── -->
+        <button id="ea-model-save" style="
+          width:100%;padding:11px;border:none;border-radius:10px;
+          background:#a6e3a1;color:#1e1e2e;font-weight:bold;
+          font-size:14px;cursor:pointer;margin-bottom:8px;
+        ">💾 Salvar</button>
+
+        <button id="ea-model-back" style="
+          width:100%;padding:10px;border:none;border-radius:10px;
+          background:#45475a;color:#cdd6f4;font-weight:bold;
+          font-size:13px;cursor:pointer;
+        ">← Voltar</button>
+
+      </div>
+    `);
+
+    const selectEl  = document.getElementById('ea-model-select');
+    const customEl  = document.getElementById('ea-model-custom');
+    const minInput  = document.getElementById('ea-min-input');
+    const maxInput  = document.getElementById('ea-max-input');
+    const intervalErr = document.getElementById('ea-interval-err');
+    const saveBtn   = document.getElementById('ea-model-save');
+    const backBtn   = document.getElementById('ea-model-back');
+
+    // Mostra/oculta campo de modelo customizado
+    selectEl.addEventListener('change', () => {
+      customEl.style.display = (selectEl.value === '__custom__') ? 'block' : 'none';
+    });
+
+    // Normaliza separador decimal (vírgula → ponto)
+    function parseMinutos(str) {
+      return parseFloat(str.replace(',', '.'));
+    }
+
+    saveBtn.onclick = () => {
+      // ── Validar modelo ──
+      let novoModelo;
+      if (selectEl.value === '__custom__') {
+        novoModelo = customEl.value.trim();
+        if (!novoModelo) return;
+      } else {
+        novoModelo = selectEl.value;
+      }
+
+      // ── Validar intervalo ──
+      const minVal = parseMinutos(minInput.value);
+      const maxVal = parseMinutos(maxInput.value);
+
+      if (isNaN(minVal) || isNaN(maxVal)) {
+        intervalErr.textContent = 'Insira números válidos nos dois campos.';
+        return;
+      }
+      if (minVal < 0.5) {
+        intervalErr.textContent = 'Mínimo permitido: 0,5 min (30 segundos).';
+        return;
+      }
+      if (maxVal > 60) {
+        intervalErr.textContent = 'Máximo permitido: 60 min (1 hora).';
+        return;
+      }
+      if (minVal >= maxVal) {
+        intervalErr.textContent = 'O mínimo deve ser menor que o máximo.';
+        return;
+      }
+
+      intervalErr.textContent = '';
+
+      // ── Persistir ──
+      GM_setValue('selectedModel', novoModelo);
+      GM_setValue('autoMinMin', minVal);
+      GM_setValue('autoMaxMin', maxVal);
+
+      onVoltar();
+    };
+
+    backBtn.onclick = onVoltar;
   }
 
   function iniciarPrincipal(apiKey, bookTitle) {
@@ -108,149 +287,168 @@
     let autoPageTimer  = null;
     let quizProcessando = false;
 
-    renderPanel(`
-      <b style="color:#cba6f7;font-size:16px;">📘 ${bookTitle || 'Modo leitura'}</b>
-      <div id="ea-status" style="margin:12px 0;font-size:14px;color:#a6adc8;">Pronto</div>
+    function renderPainelPrincipal() {
+      renderPanel(`
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <b style="color:#cba6f7;font-size:16px;">📘 ${bookTitle || 'Modo leitura'}</b>
+          <button id="ea-config-btn" title="Configurar modelo de IA" style="
+            background:#313244;border:none;border-radius:8px;color:#cdd6f4;
+            font-size:14px;cursor:pointer;padding:4px 9px;line-height:1;
+          ">⚙</button>
+        </div>
+        <div id="ea-status" style="font-size:14px;color:#a6adc8;">Pronto</div>
 
-      <button id="ea-auto-btn" style="
-        width:100%;padding:11px;border:none;margin-bottom:8px;
-        border-radius:10px;background:#89b4fa;
-        font-weight:bold;font-size:14px;cursor:pointer;color:#1e1e2e;
-        transform:translateY(5px);
-      ">${apiKey ? '▶ Iniciar' : '▶ Iniciar Auto-Página'}</button>
+        <button id="ea-auto-btn" style="
+          width:100%;padding:11px;border:none;
+          border-radius:10px;background:#89b4fa;
+          font-weight:bold;font-size:14px;cursor:pointer;color:#1e1e2e;
+          transform:translateY(5px);
+        ">${apiKey ? '▶ Iniciar' : '▶ Iniciar Auto-Página'}</button>
 
-      <div id="ea-result" style="
-        margin-top:8px;max-height:300px;
-        overflow:auto;font-size:12px;
-        white-space:pre-wrap;color:#a6adc8;
-      "></div>
+        <div id="ea-result" style="
+          max-height:300px;overflow:auto;font-size:12px;
+          white-space:pre-wrap;color:#a6adc8;
+        "></div>
 
-      <button id="ea-reset-btn" style="
-        width:100%;padding:10px;border:none;margin-top:12px;
-        border-radius:10px;background:#45475a;
-        font-size:13px;font-weight:bold;cursor:pointer;color:#cdd6f4;
-      ">⚙ Reconfigurar</button>
-    `);
+        <button id="ea-reset-btn" style="
+          width:100%;padding:10px;border:none;
+          border-radius:10px;background:#45475a;
+          font-size:13px;font-weight:bold;cursor:pointer;color:#cdd6f4;
+        ">⚙ Reconfigurar</button>
+      `);
 
-    const statusEl = document.getElementById('ea-status');
-    const resultEl = document.getElementById('ea-result');
-    const autoBtn  = document.getElementById('ea-auto-btn');
-    const resetBtn = document.getElementById('ea-reset-btn');
+      const statusEl = document.getElementById('ea-status');
+      const resultEl = document.getElementById('ea-result');
+      const autoBtn  = document.getElementById('ea-auto-btn');
+      const resetBtn = document.getElementById('ea-reset-btn');
+      const configBtn = document.getElementById('ea-config-btn');
 
-    function setStatus(t, c = '#a6e3a1') {
-      statusEl.textContent = t;
-      statusEl.style.color = c;
-    }
+      function setStatus(t, c = '#a6e3a1') {
+        statusEl.textContent = t;
+        statusEl.style.color = c;
+      }
 
-    // ─── Auto-page ───────────────────────────────────────────────────────────
-    function isQuizOpen() {
-      const modal = document.querySelector('ngb-modal-window.quiz-modal') ||
-                    document.querySelector('[role="dialog"]');
-      if (!modal) return false;
-      const buttons = [...modal.querySelectorAll('button')]
-        .map(b => b.textContent.trim())
-        .filter(t => t.length > 5 && !/confirmar|voltar|próxima|continuar/i.test(t));
-      return buttons.length >= 2;
-    }
+      configBtn.onclick = () => {
+        if (observer) observer.disconnect();
+        abrirConfigModelo(() => {
+          renderPainelPrincipal();
+          if (observer) observer.observe(document.body, { childList: true, subtree: true });
+        });
+      };
 
-    function startAutoPage() {
-      if (autoPageTimer) return;
-      autoPageActive = true;
-      autoBtn.textContent = '⏹ Parar';
-      autoBtn.style.background = '#f38ba8';
-      setStatus('Navegando...', '#89b4fa');
-      function tick() {
-        if (!autoPageActive) return;
-        if (!isQuizOpen()) {
-          document.body.dispatchEvent(new KeyboardEvent('keydown', {
-            key: 'ArrowRight', code: 'ArrowRight', bubbles: true
-          }));
+      // ─── Auto-page ───────────────────────────────────────────────────────────
+      function isQuizOpen() {
+        const modal = document.querySelector('ngb-modal-window.quiz-modal') ||
+                      document.querySelector('[role="dialog"]');
+        if (!modal) return false;
+        const buttons = [...modal.querySelectorAll('button')]
+          .map(b => b.textContent.trim())
+          .filter(t => t.length > 5 && !/confirmar|voltar|próxima|continuar/i.test(t));
+        return buttons.length >= 2;
+      }
+
+      function startAutoPage() {
+        if (autoPageTimer) return;
+        autoPageActive = true;
+        autoBtn.textContent = '⏹ Parar';
+        autoBtn.style.background = '#f38ba8';
+        setStatus('Navegando...', '#89b4fa');
+        function tick() {
+          if (!autoPageActive) return;
+          if (!isQuizOpen()) {
+            document.body.dispatchEvent(new KeyboardEvent('keydown', {
+              key: 'ArrowRight', code: 'ArrowRight', bubbles: true
+            }));
+          }
+          // ── Lê intervalo configurado pelo usuário ──────────────────────────
+          const minMs = GM_getValue('autoMinMin', AUTO_MIN_DEFAULT) * 60000;
+          const maxMs = GM_getValue('autoMaxMin', AUTO_MAX_DEFAULT) * 60000;
+          const delay = Math.random() * (maxMs - minMs) + minMs;
+          autoPageTimer = setTimeout(tick, delay);
         }
-        const delay = Math.random() * (180000 - 120000) + 120000;
-        autoPageTimer = setTimeout(tick, delay);
-      }
-      tick();
-    }
-
-    function stopAutoPage() {
-      clearTimeout(autoPageTimer);
-      autoPageTimer = null;
-      autoPageActive = false;
-      autoBtn.textContent = apiKey ? '▶ Iniciar' : '▶ Iniciar Auto-Página';
-      autoBtn.style.background = '#89b4fa';
-      setStatus('Pronto');
-    }
-
-    // ─── Modal ───────────────────────────────────────────────────────────────
-    function getModal() {
-      return document.querySelector('ngb-modal-window.quiz-modal') ||
-             document.querySelector('[role="dialog"]');
-    }
-
-    // ─── Tela final ──────────────────────────────────────────────────────────
-    function detectarTelaFinal() {
-      const modal = getModal();
-      if (!modal) return null;
-      // Tela final: só existe button.fund2-button sem .w-50
-      const todosFund2 = [...modal.querySelectorAll('button.fund2-button')];
-      if (todosFund2.length === 0) return null;
-      const temW50 = todosFund2.some(b => b.classList.contains('w-50'));
-      if (temW50) return null; // ainda é tela de quiz normal
-      return todosFund2.find(b => b.textContent.includes('Continuar')) || null;
-    }
-
-    // ─── Extração do quiz ────────────────────────────────────────────────────
-    function extrair() {
-      const modal = getModal();
-      if (!modal) return null;
-
-      const textarea = modal.querySelector('textarea.form-control');
-      if (textarea) {
-        const pergunta = modal.querySelector('h6')?.innerText?.trim() || '';
-        if (pergunta) return { tipo: 'dissertativa', pergunta };
-        return null;
+        tick();
       }
 
-      const linhas = modal.innerText
-        .replace(/\r/g, '')
-        .split('\n')
-        .map(l => l.trim())
-        .filter(Boolean)
-        .filter(l =>
-          !/^quiz$/i.test(l) &&
-          !/^x$/i.test(l) &&
-          !/^[1-9]$/.test(l) &&
-          !/confirmar|voltar|próxima|proxima|continuar|biblioteca|analisar/i.test(l)
-        );
+      function stopAutoPage() {
+        clearTimeout(autoPageTimer);
+        autoPageTimer = null;
+        autoPageActive = false;
+        autoBtn.textContent = apiKey ? '▶ Iniciar' : '▶ Iniciar Auto-Página';
+        autoBtn.style.background = '#89b4fa';
+        setStatus('Pronto');
+      }
 
-      const opcoes = [];
-      for (let i = 0; i < linhas.length; i++) {
-        const linha = linhas[i];
-        const match = linha.match(/^([A-D])\.\s*(.*)$/);
-        if (match) {
-          let texto = match[2].trim();
-          if (!texto && linhas[i + 1]) texto = linhas[i + 1].trim();
-          opcoes.push({ letra: match[1], texto });
+      // ─── Modal ───────────────────────────────────────────────────────────────
+      function getModal() {
+        return document.querySelector('ngb-modal-window.quiz-modal') ||
+               document.querySelector('[role="dialog"]');
+      }
+
+      // ─── Tela final ──────────────────────────────────────────────────────────
+      function detectarTelaFinal() {
+        const modal = getModal();
+        if (!modal) return null;
+        const todosFund2 = [...modal.querySelectorAll('button.fund2-button')];
+        if (todosFund2.length === 0) return null;
+        const temW50 = todosFund2.some(b => b.classList.contains('w-50'));
+        if (temW50) return null;
+        return todosFund2.find(b => b.textContent.includes('Continuar')) || null;
+      }
+
+      // ─── Extração do quiz ────────────────────────────────────────────────────
+      function extrair() {
+        const modal = getModal();
+        if (!modal) return null;
+
+        const textarea = modal.querySelector('textarea.form-control');
+        if (textarea) {
+          const pergunta = modal.querySelector('h6')?.innerText?.trim() || '';
+          if (pergunta) return { tipo: 'dissertativa', pergunta };
+          return null;
         }
+
+        const linhas = modal.innerText
+          .replace(/\r/g, '')
+          .split('\n')
+          .map(l => l.trim())
+          .filter(Boolean)
+          .filter(l =>
+            !/^quiz$/i.test(l) &&
+            !/^x$/i.test(l) &&
+            !/^[1-9]$/.test(l) &&
+            !/confirmar|voltar|próxima|proxima|continuar|biblioteca|analisar/i.test(l)
+          );
+
+        const opcoes = [];
+        for (let i = 0; i < linhas.length; i++) {
+          const linha = linhas[i];
+          const match = linha.match(/^([A-D])\.\s*(.*)$/);
+          if (match) {
+            let texto = match[2].trim();
+            if (!texto && linhas[i + 1]) texto = linhas[i + 1].trim();
+            opcoes.push({ letra: match[1], texto });
+          }
+        }
+
+        if (opcoes.length < 2) return null;
+
+        const indexA = linhas.findIndex(l => /^A\./.test(l));
+        const pergunta = linhas.slice(0, indexA).join(' ').trim();
+
+        if (!pergunta || pergunta.toLowerCase() === 'quiz') return null;
+
+        return { tipo: 'multipla', pergunta, opcoes: opcoes.slice(0, 4) };
       }
 
-      if (opcoes.length < 2) return null;
+      // ─── Chamada IA ──────────────────────────────────────────────────────────
+      function perguntarIA(q) {
+        const modeloAtual = getModeloAtual();
 
-      const indexA = linhas.findIndex(l => /^A\./.test(l));
-      const pergunta = linhas.slice(0, indexA).join(' ').trim();
+        return new Promise((resolve, reject) => {
+          let prompt;
 
-      if (!pergunta || pergunta.toLowerCase() === 'quiz') return null;
-
-      return { tipo: 'multipla', pergunta, opcoes: opcoes.slice(0, 4) };
-    }
-
-    // ─── Chamada IA ──────────────────────────────────────────────────────────
-    function perguntarIA(q) {
-      return new Promise((resolve, reject) => {
-        let prompt;
-
-        if (q.tipo === 'dissertativa') {
-          prompt = `Você é especialista no livro "${bookTitle}".
+          if (q.tipo === 'dissertativa') {
+            prompt = `Você é especialista no livro "${bookTitle}".
 Responda a pergunta abaixo em português, com entre 10 e 100 palavras. Seja direto e preciso.
 Responda apenas com o texto da resposta, sem introdução, sem "Resposta:", sem formatação extra.
 
@@ -261,11 +459,12 @@ REGRAS ABSOLUTAS:
 - Não use "Resposta:", "Claro!", "Aqui está" ou qualquer prefácio
 - Não use marcadores, listas ou formatação
 - Mínimo 10 palavras, máximo 80 palavras
+- Não use -, ─ ou qualquer sinal que n seja , . : ; e as acentouações
 
 Exemplo de formato correto (não use este conteúdo, só o formato):
 "Percy foi enviado ao Acampamento Meio-Sangue porque descobriu ser filho de Poseidon e estava em perigo constante de monstros."`;
-        } else {
-          prompt = `Você é especialista no livro "${bookTitle}".
+          } else {
+            prompt = `Você é especialista no livro "${bookTitle}".
 
 Analise com extremo cuidado.
 
@@ -286,232 +485,242 @@ Explicação: [uma breve explicação em português]
 Não escreva nada antes de "Resposta:".
 Depois, verifique: "A resposta realmente responde a pergunta?"
 Se não, escolha outra.`;
-        }
+          }
 
-        let timeoutId;
-        const timeoutPromise = new Promise((_, rej) => {
-          timeoutId = setTimeout(() => rej(new Error('Tempo limite excedido (30s)')), 30000);
-        });
-
-        const requestPromise = new Promise((res, rej) => {
-          GM_xmlhttpRequest({
-            method: 'POST',
-            url: 'https://openrouter.ai/api/v1/chat/completions',
-            headers: {
-              Authorization: `Bearer ${apiKey}`,
-              'Content-Type': 'application/json'
-            },
-            data: JSON.stringify({
-              model: MODEL,
-              messages: [
-                {
-                  role: 'system',
-                  content: 'Responda sempre em português do Brasil. Não dê tantos detalhes. Responda somente no formato pedido.'
-                },
-                { role: 'user', content: prompt }
-              ],
-              temperature: 0
-            }),
-            onload: r => {
-              try {
-                const data = JSON.parse(r.responseText);
-                if (data.error) { rej(new Error(`API: ${data.error.message}`)); return; }
-                const txt = data.choices?.[0]?.message?.content;
-                if (!txt) { rej(new Error('Resposta vazia da IA')); return; }
-                res(txt);
-              } catch {
-                rej(new Error('Erro ao processar resposta da IA'));
-              }
-            },
-            onerror: () => rej(new Error('Erro rede'))
+          let timeoutId;
+          const timeoutPromise = new Promise((_, rej) => {
+            timeoutId = setTimeout(() => rej(new Error('Tempo limite excedido (30s)')), 30000);
           });
+
+          const requestPromise = new Promise((res, rej) => {
+            GM_xmlhttpRequest({
+              method: 'POST',
+              url: 'https://openrouter.ai/api/v1/chat/completions',
+              headers: {
+                Authorization: `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+              },
+              data: JSON.stringify({
+                model: modeloAtual,
+                messages: [
+                  {
+                    role: 'system',
+                    content: 'Responda sempre em português do Brasil. Não dê tantos detalhes. Responda somente no formato pedido.'
+                  },
+                  { role: 'user', content: prompt }
+                ],
+                temperature: 0
+              }),
+              onload: r => {
+                try {
+                  const data = JSON.parse(r.responseText);
+                  if (data.error) { rej(new Error(`API: ${data.error.message}`)); return; }
+                  const txt = data.choices?.[0]?.message?.content;
+                  if (!txt) { rej(new Error('Resposta vazia da IA')); return; }
+                  res(txt);
+                } catch {
+                  rej(new Error('Erro ao processar resposta da IA'));
+                }
+              },
+              onerror: () => rej(new Error('Erro rede'))
+            });
+          });
+
+          Promise.race([requestPromise, timeoutPromise])
+            .then(result => { clearTimeout(timeoutId); resolve(result); })
+            .catch(err   => { clearTimeout(timeoutId); reject(err); });
         });
+      }
 
-        Promise.race([requestPromise, timeoutPromise])
-          .then(result => { clearTimeout(timeoutId); resolve(result); })
-          .catch(err   => { clearTimeout(timeoutId); reject(err); });
-      });
-    }
+      // ─── Dissertativa ────────────────────────────────────────────────────────
+      function colarResposta(texto) {
+        const modal = getModal();
+        if (!modal) return;
+        const textarea = modal.querySelector('textarea.form-control');
+        if (!textarea) return;
 
-    // ─── Dissertativa ────────────────────────────────────────────────────────
-    function colarResposta(texto) {
-      const modal = getModal();
-      if (!modal) return;
-      const textarea = modal.querySelector('textarea.form-control');
-      if (!textarea) return;
+        const setter = Object.getOwnPropertyDescriptor(
+          window.HTMLTextAreaElement.prototype, 'value'
+        ).set;
+        setter.call(textarea, texto);
+        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        textarea.dispatchEvent(new Event('change', { bubbles: true }));
+      }
 
-      const setter = Object.getOwnPropertyDescriptor(
-        window.HTMLTextAreaElement.prototype, 'value'
-      ).set;
-      setter.call(textarea, texto);
-      textarea.dispatchEvent(new Event('input', { bubbles: true }));
-      textarea.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-
-    function aguardarBotao(textoBotao, timeoutMs = 5000) {
-      return new Promise((resolve) => {
-        const inicio = Date.now();
-        const intervalo = setInterval(() => {
-          const modal = getModal();
-          if (!modal) { clearInterval(intervalo); resolve(null); return; }
-
-          const btn = [...modal.querySelectorAll('button')]
-            .find(b =>
-              b.textContent.trim().includes(textoBotao) &&
-              !b.disabled &&
-              !b.classList.contains('disabled')
-            );
-
-          if (btn) { clearInterval(intervalo); resolve(btn); return; }
-          if (Date.now() - inicio > timeoutMs) { clearInterval(intervalo); resolve(null); }
-        }, 200);
-      });
-    }
-
-    async function confirmarDissertativa() {
-      setStatus('Enviando...', '#cba6f7');
-      const btnAnalisar = await aguardarBotao('Analisar com IA');
-      if (!btnAnalisar) { setStatus('Btn não encontrado', '#f9e2af'); return; }
-      btnAnalisar.click();
-
-      setStatus('Aguardando resultado...', '#cba6f7');
-      const btnProxima = await new Promise((resolve) => {
-        const inicio = Date.now();
-        const intervalo = setInterval(() => {
-          const modal = getModal();
-          if (!modal) { clearInterval(intervalo); resolve(null); return; }
-          const btn = modal.querySelector('button.fund2-button.w-50:not(.disabled):not([disabled])');
-          if (btn) { clearInterval(intervalo); resolve(btn); return; }
-          if (Date.now() - inicio > 10000) { clearInterval(intervalo); resolve(null); }
-        }, 200);
-      });
-
-      if (!btnProxima) { setStatus('OK', '#a6e3a1'); return; }
-      btnProxima.click();
-      setStatus('Próxima!', '#a6e3a1');
-    }
-
-    // ─── Run ─────────────────────────────────────────────────────────────────
-    async function run() {
-      if (quizProcessando) return;
-      quizProcessando = true;
-
-      if (observer) observer.disconnect();
-
-      const eraAtivo = autoPageActive;
-      if (eraAtivo) stopAutoPage();
-
-      try {
-        setStatus('Lendo...', '#89b4fa');
-        const q = extrair();
-
-        if (!q) {
-          setStatus('Não achei', '#f38ba8');
-          return;
-        }
-
-        if (q.tipo === 'dissertativa') {
-          resultEl.textContent = `[Dissertativa]\nPergunta:\n${q.pergunta}\n\nAguardando IA...`;
-        } else {
-          resultEl.textContent =
-            `Pergunta:\n${q.pergunta}\n\n` +
-            q.opcoes.map(o => `${o.letra}. ${o.texto}`).join('\n');
-        }
-
-        setStatus('IA...', '#f9e2af');
-        const r = await perguntarIA(q);
-        setStatus('OK', '#a6e3a1');
-        resultEl.textContent += `\n\n${r}`;
-
-        if (q.tipo === 'dissertativa') {
-          colarResposta(r.replace(/^[""\u201C\u201D''\u2018\u2019]+|[""\u201C\u201D''\u2018\u2019]+$/g, '').trim());
-          await confirmarDissertativa();
-        } else {
-          const match = r.match(/Resposta:\s*([A-D])/i);
-          if (match) {
-            const letra = match[1].toUpperCase();
+      function aguardarBotao(textoBotao, timeoutMs = 5000) {
+        return new Promise((resolve) => {
+          const inicio = Date.now();
+          const intervalo = setInterval(() => {
             const modal = getModal();
-            if (modal) {
-              const btnAlternativa = [...modal.querySelectorAll('button.answer-btn')]
-                .find(b => b.querySelector('h5')?.textContent.trim().startsWith(letra));
-              if (btnAlternativa) {
-                btnAlternativa.click();
-                setTimeout(() => {
-                  const btnConfirmar = modal.querySelector('button.fund2-button.w-50:not(.disabled):not([disabled])');
-                  if (btnConfirmar) btnConfirmar.click();
-                }, 1000);
+            if (!modal) { clearInterval(intervalo); resolve(null); return; }
+
+            const btn = [...modal.querySelectorAll('button')]
+              .find(b =>
+                b.textContent.trim().includes(textoBotao) &&
+                !b.disabled &&
+                !b.classList.contains('disabled')
+              );
+
+            if (btn) { clearInterval(intervalo); resolve(btn); return; }
+            if (Date.now() - inicio > timeoutMs) { clearInterval(intervalo); resolve(null); }
+          }, 200);
+        });
+      }
+
+      async function confirmarDissertativa() {
+          setStatus('Enviando...', '#cba6f7');
+
+          const btnAnalisar = await aguardarBotao('Analisar com IA', 5000);
+          if (btnAnalisar) {
+              btnAnalisar.click();
+          }
+
+          setStatus('Aguardando resultado...', '#cba6f7');
+          const btnProxima = await new Promise((resolve) => {
+              const inicio = Date.now();
+              const intervalo = setInterval(() => {
+                  const modal = getModal();
+                  if (!modal) { clearInterval(intervalo); resolve(null); return; }
+                  const btn = modal.querySelector('button.fund2-button.w-50:not(.disabled):not([disabled])');
+                  if (btn) { clearInterval(intervalo); resolve(btn); return; }
+                  if (Date.now() - inicio > 10000) { clearInterval(intervalo); resolve(null); }
+              }, 200);
+          });
+
+          if (!btnProxima) { setStatus('OK (sem próxima)', '#a6e3a1'); return; }
+          btnProxima.click();
+          setStatus('Próxima!', '#a6e3a1');
+      }
+
+      // ─── Run ─────────────────────────────────────────────────────────────────
+      async function run() {
+        if (quizProcessando) return;
+        quizProcessando = true;
+
+        if (observer) observer.disconnect();
+
+        const eraAtivo = autoPageActive;
+        if (eraAtivo) stopAutoPage();
+
+        try {
+          setStatus('Lendo...', '#89b4fa');
+          const q = extrair();
+          console.log('=== DEBUG EXTRACAO ===');
+          console.log('Tipo:', q?.tipo);
+          console.log('Pergunta enviada pra IA:', q?.pergunta);
+          console.log('Tamanho da pergunta (chars):', q?.pergunta?.length);
+
+          const modalDebug = getModal();
+          console.log('--- HTML completo do modal (innerText) ---');
+          console.log(modalDebug?.innerText);
+          console.log('=== FIM DEBUG ===');
+          if (!q) {
+            setStatus('Não achei', '#f38ba8');
+            return;
+          }
+
+          if (q.tipo === 'dissertativa') {
+            resultEl.textContent = `[Dissertativa]\nPergunta:\n${q.pergunta}\n\nAguardando IA...`;
+          } else {
+            resultEl.textContent =
+              `Pergunta:\n${q.pergunta}\n\n` +
+              q.opcoes.map(o => `${o.letra}. ${o.texto}`).join('\n');
+          }
+
+          setStatus('IA...', '#f9e2af');
+          const r = await perguntarIA(q);
+          setStatus('OK', '#a6e3a1');
+          resultEl.textContent += `\n\n${r}`;
+
+          if (q.tipo === 'dissertativa') {
+            colarResposta(r.replace(/^[""\u201C\u201D''\u2018\u2019]+|[""\u201C\u201D''\u2018\u2019]+$/g, '').trim());
+            await confirmarDissertativa();
+          } else {
+            const match = r.match(/Resposta:\s*\[?([A-D])\]?/i);
+            if (match) {
+              const letra = match[1].toUpperCase();
+              const modal = getModal();
+              if (modal) {
+                const btnAlternativa = [...modal.querySelectorAll('button.answer-btn')]
+                  .find(b => b.querySelector('h5')?.textContent.trim().startsWith(letra));
+                if (btnAlternativa) {
+                  btnAlternativa.click();
+                  setTimeout(() => {
+                    const btnConfirmar = modal.querySelector('button.fund2-button.w-50:not(.disabled):not([disabled])');
+                    if (btnConfirmar) btnConfirmar.click();
+                  }, 1000);
+                }
               }
             }
           }
+        } catch (e) {
+          setStatus('Erro', '#f38ba8');
+          resultEl.textContent = e.message;
+        } finally {
+          quizProcessando = false;
+          if (observer) observer.observe(document.body, { childList: true, subtree: true });
+          if (eraAtivo) startAutoPage();
         }
-      } catch (e) {
-        setStatus('Erro', '#f38ba8');
-        resultEl.textContent = e.message;
-      } finally {
-        quizProcessando = false;
-        if (observer) observer.observe(document.body, { childList: true, subtree: true });
-        if (eraAtivo) startAutoPage();
       }
+
+      // ─── Botões ──────────────────────────────────────────────────────────────
+      autoBtn.addEventListener('click', () => {
+        if (autoPageActive) {
+          stopAutoPage();
+        } else {
+          startAutoPage();
+        }
+      });
+
+      resetBtn.onclick = () => {
+        stopAutoPage();
+        GM_setValue('apiKey', '');
+        GM_setValue('bookTitle', '');
+        GM_setValue('noAI', false);
+        if (observer) { observer.disconnect(); observer = null; }
+        clearTimeout(debounceTimer);
+        init();
+      };
+
+      // ─── MutationObserver ────────────────────────────────────────────────────
+      setStatus(
+        apiKey ? '🛈 Modo com IA ativa' : 'ⓘ Modo de apenas leitura',
+        apiKey ? '#a6e3a1' : '#f9e2af'
+      );
+
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+
+      observer = new MutationObserver(() => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          if (quizProcessando) return;
+
+          const continuarBtn = detectarTelaFinal();
+          if (continuarBtn) {
+            continuarBtn.click();
+            const esperarFechar = setInterval(() => {
+              if (!getModal()) {
+                clearInterval(esperarFechar);
+                startAutoPage();
+              }
+            }, 300);
+            return;
+          }
+
+          if (!apiKey) return;
+          if (!extrair()) return;
+          stopAutoPage();
+          run();
+        }, 300);
+      });
+
+      observer.observe(document.body, { childList: true, subtree: true });
     }
 
-    // ─── Botões ──────────────────────────────────────────────────────────────
-    autoBtn.addEventListener('click', () => {
-      if (autoPageActive) {
-        stopAutoPage();
-      } else {
-        startAutoPage();
-      }
-    });
-
-    resetBtn.onclick = () => {
-      stopAutoPage();
-      GM_setValue('apiKey', '');
-      GM_setValue('bookTitle', '');
-      GM_setValue('noAI', false);
-      if (observer) { observer.disconnect(); observer = null; }
-      clearTimeout(debounceTimer);
-      init();
-    };
-
-    // ─── MutationObserver ────────────────────────────────────────────────────
-    setStatus(
-      apiKey ? '🛈 Modo com IA ativa' : 'ⓘ Modo de apenas leitura',
-      apiKey ? '#a6e3a1' : '#f9e2af'
-    );
-
-    if (observer) {
-      observer.disconnect();
-      observer = null;
-    }
-
-    observer = new MutationObserver(() => {
-      clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
-        if (quizProcessando) return;
-
-        // Tela final tem prioridade — independe de apiKey
-        const continuarBtn = detectarTelaFinal();
-        if (continuarBtn) {
-          continuarBtn.click();
-          // Aguarda modal fechar, então retoma auto-página
-          const esperarFechar = setInterval(() => {
-            if (!getModal()) {
-              clearInterval(esperarFechar);
-              startAutoPage();
-            }
-          }, 300);
-          return;
-        }
-
-        // Quiz normal só roda com IA ativa
-        if (!apiKey) return;
-        if (!extrair()) return;
-        stopAutoPage();
-        run();
-      }, 300);
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
+    renderPainelPrincipal();
   }
 
 })();
