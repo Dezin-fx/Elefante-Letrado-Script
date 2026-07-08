@@ -106,7 +106,7 @@ Essas configurações ficam armazenadas localmente pelo Tampermonkey.
 
 # 🔑 API utilizada
 
-Quando desejado, o script utiliza a API da [OpenRouter](https://openrouter.ai).
+Quando desejado, o script utiliza a API da **OpenRouter**.
 
 ## Para utilizar IA:
 
