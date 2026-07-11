@@ -82,7 +82,7 @@ O nome do livro é detectado automaticamente sempre que possível e armazenado p
 
 ---
 
-# ⚙ Painel de Configurações
+#  Painel de Configurações
 
 O botão **⚙** disponível no painel principal permite alterar as configurações do script a qualquer momento.
 
