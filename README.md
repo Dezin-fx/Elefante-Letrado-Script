@@ -6,7 +6,7 @@
 
 ---
 
-# 📌 Sobre o projeto
+#  Sobre o projeto
 
 O **Elefante Letrado Automático** é um userscript para **Tampermonkey** que adiciona recursos de automação e assistência à plataforma Elefante Letrado.
 
@@ -16,7 +16,7 @@ O uso da IA é totalmente opcional. O script funciona normalmente apenas com os 
 
 ---
 
-# 🔒 É seguro?
+#  É seguro?
 
 - O script é executado inteiramente no seu navegador.
 - Nenhum dado é enviado para servidores próprios.
@@ -40,7 +40,7 @@ O uso da IA é totalmente opcional. O script funciona normalmente apenas com os 
 
 ---
 
-# 📥 Instalação
+#  Instalação
 
 O script foi desenvolvido para utilização com o **Tampermonkey**.
 
@@ -104,7 +104,7 @@ Essas configurações ficam armazenadas localmente pelo Tampermonkey.
 
 ---
 
-# 🔑 API utilizada
+#  API utilizada
 
 Quando desejado, o script utiliza a API da **OpenRouter**.
 
