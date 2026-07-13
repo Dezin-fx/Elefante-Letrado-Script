@@ -80,6 +80,18 @@ Não é necessário editar nenhum arquivo do script.
 
 O nome do livro é detectado automaticamente sempre que possível e armazenado para utilização nas próximas execuções.
 
+#  API utilizada
+
+Quando desejado, o script utiliza a API da **OpenRouter**.
+
+## Para utilizar IA:
+
+1. Crie uma conta no [OpenRouter](https://openrouter.ai).
+2. Gere uma API Key em [OpenRouter Key](https://openrouter.ai/workspaces/default/keys).
+3. Na primeira execução do script, cole a chave quando o painel solicitar.
+
+A API Key fica armazenada apenas localmente pelo Tampermonkey e pode ser alterada ou removida a qualquer momento através da opção de reconfiguração do script.
+
 ---
 
 #  Painel de Configurações
@@ -104,14 +116,3 @@ Essas configurações ficam armazenadas localmente pelo Tampermonkey.
 
 ---
 
-#  API utilizada
-
-Quando desejado, o script utiliza a API da **OpenRouter**.
-
-## Para utilizar IA:
-
-1. Crie uma conta no [OpenRouter](https://openrouter.ai).
-2. Gere uma API Key em [OpenRouter Key](https://openrouter.ai/workspaces/default/keys).
-3. Na primeira execução do script, cole a chave quando o painel solicitar.
-
-A API Key fica armazenada apenas localmente pelo Tampermonkey e pode ser alterada ou removida a qualquer momento através da opção de reconfiguração do script.
