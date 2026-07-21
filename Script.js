@@ -79,12 +79,12 @@
           style="
             width:100%;box-sizing:border-box;padding:10px 12px;border:2px solid #6c5fc7;border-radius:8px;margin:0 0 6px 0;background:#11111b;color:#cdd6f4;font-family:monospace;font-size:14px;outline:none;display:block;transform:translateY(-7px);text-align:left;">
         <div id="ea-err" style="display:none;color:#f38ba8;font-size:12px;margin-top:3px;transform:translateY(-7px);"></div>
-        <button id="ea-ok" style="
+        <button id="ea-ok" class="ea-btn-animado" style="
           width:100%;padding:11px;border:none;border-radius:10px;
           background:#a6e3a1;color:#1e1e2e;font-weight:bold;
           font-size:14px;cursor:pointer;
         ">Continuar</button>
-        <button id="ea-noai" style="
+        <button id="ea-noai" class="ea-btn-animado" style="
           width:100%;padding:11px;border:none;border-radius:10px;
           background:#313244;color:#cdd6f4;font-weight:bold;
           font-size:14px;cursor:pointer;
@@ -110,22 +110,184 @@
     }
   }
 
+    // ─── NOVA FUNÇÃO RENDERPANEL (FLUTUANTE E ARRASTÁVEL) ───────────────────────
   function renderPanel(html) {
     let panel = document.getElementById('ea-panel');
+
+    // Se o painel ainda não existe na página, cria a CASCA FIXA uma única vez
     if (!panel) {
+        // INJETAR FOLHA DE ESTILOS PARA ANIMAÇÕES SUAVES
+        const estiloAnimacoes = document.createElement('style');
+      estiloAnimacoes.textContent = `
+        .ea-btn-animado {
+          transition: background-color 0.2s ease, transform 0.1s ease, filter 0.2s ease !important;
+        }
+        .ea-btn-animado:hover {
+          filter: brightness(1.1);
+          transform: translateY(-1px);
+        }
+        .ea-btn-animado:active {
+          transform: translateY(1px) scale(0.98);
+        }
+
+        .ea-btn-icone {
+          transition: background-color 0.2s ease, transform 0.1s ease, color 0.2s ease !important;
+        }
+        .ea-btn-icone:hover {
+          background-color: #45475a !important;
+          color: #f5e0dc !important;
+        }
+        .ea-btn-icone:active {
+          transform: scale(0.92);
+        }
+
+         @keyframes eaFadeKeyframe {
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .ea-fade-in {
+          animation: eaFadeKeyframe 0.25s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
+        }
+      `;
+      document.head.appendChild(estiloAnimacoes);
+
       panel = document.createElement('div');
       panel.id = 'ea-panel';
       panel.style.cssText = `
-        position:fixed;bottom:20px;right:20px;z-index:999999;
-        background:#1e1e2e;color:#cdd6f4;font-family:monospace;
-        border-radius:16px;padding:20px;box-shadow:0 8px 32px #0009;
-        width:360px;max-width:calc(100vw - 40px);
-        display:flex;flex-direction:column;gap:12px;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 999999;
+        background: #1e1e2e;
+        color: #cdd6f4;
+        font-family: monospace;
+        border: 1px solid #313244;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+        width: 380px;
+        max-width: calc(100vw - 40px);
+        display: flex;
+        flex-direction: column;
       `;
+
+            // Define a barra de título com o contador jogado para o canto direito, ao lado do botão -
+      panel.innerHTML = `
+        <div id="ea-drag-header" style="
+          cursor: move;
+          user-select: none;
+          background: #11111b;
+          margin: -20px -20px 0 -20px;
+          padding: 16px 20px 24px 20px;
+          border-radius: 16px 16px 0 0;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          position: relative;
+          z-index: 1;
+        ">
+          <strong style="color: #cba6f7; font-size: 13px; letter-spacing: 0.5px;"> Elefante Letrado Script</strong>
+
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <span id="ea-page-count" style="background: #313244; color: #a6e3a1; font-size: 11px; padding: 2px 8px; border-radius: 9999px; font-weight: bold; border: 1px solid #45475a; white-space: nowrap;">Pags: 0</span>
+            <button id="ea-min-btn" class="ea-btn-icone" style="width: 24px; height: 24px; border: none; border-radius: 6px; background: #313244; color: #cdd6f4; cursor: pointer; font-size: 14px; font-weight: bold; line-height: 1;">−</button>
+          </div>
+        </div>
+        <div id="ea-panel-content" style="
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          background: #1e1e2e;
+          margin: -12px -20px -20px -20px;
+          padding: 24px 20px 20px 20px;
+          border-radius: 18px 18px 12px 12px;
+          position: relative;
+          z-index: 2;
+          box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.3);
+        "></div>
+      `;
+
       document.body.appendChild(panel);
+
+      // ── LÓGICA DE ARRASTAR (DRAG & DROP) ──
+      let isDragging = false, offsetX, offsetY;
+      const header = document.getElementById("ea-drag-header");
+
+      // Quando segura o clique no cabeçalho
+      header.addEventListener('mousedown', e => {
+        if (e.target.tagName === "BUTTON") return;
+        isDragging = true;
+        offsetX = e.clientX - panel.offsetLeft;
+        offsetY = e.clientY - panel.offsetTop;
+      });
+
+            document.addEventListener('mousemove', e => {
+        if (!isDragging) return;
+
+        // 1. Calcula a nova posição baseada no mouse
+        let newLeft = e.clientX - offsetX;
+        let newTop  = e.clientY - offsetY;
+
+        // 2. Define os limites máximos da tela do navegador
+        const maxLeft = window.innerWidth - panel.offsetWidth;
+        const maxTop  = window.innerHeight - panel.offsetHeight;
+
+        // 3. Aplica as travas (não deixa ser menor que 0 nem maior que o máximo)
+        if (newLeft < 0) newLeft = 0;
+        if (newLeft > maxLeft) newLeft = maxLeft;
+
+        if (newTop < 0) newTop = 0;
+        if (newTop > maxTop) newTop = maxTop;
+
+        // 4. Aplica os valores finais travados no painel
+        panel.style.left = newLeft + "px";
+        panel.style.top = newTop + "px";
+        panel.style.right = "auto";
+        panel.style.bottom = "auto";
+      });
+
+
+      // Quando solta o clique do mouse em qualquer lugar da tela
+      document.addEventListener('mouseup', () => { isDragging = false; });
+
+      // ── LÓGICA DE MINIMIZAR ──
+      let minimized = false;
+      const minBtn = document.getElementById("ea-min-btn");
+      const contentArea = document.getElementById("ea-panel-content");
+
+      minBtn.onclick = () => {
+        minimized = !minimized;
+        if (minimized) {
+          contentArea.style.display = "none";
+          minBtn.textContent = "+";
+        } else {
+          contentArea.style.display = "flex";
+          minBtn.textContent = "−";
+        }
+      };
     }
-    panel.innerHTML = html;
+
+    // MIOLO DINÂMICO: Alimenta apenas a região de conteúdo, mantendo o cabeçalho e os eventos intactos
+    const contentArea = document.getElementById('ea-panel-content');
+    if (contentArea) {
+      // 1. Remove a classe para resetar o efeito
+      contentArea.classList.remove('ea-fade-in');
+
+      // 2. Injeta o novo HTML da tela
+      contentArea.innerHTML = html;
+
+      // 3. Força o navegador a reiniciar a animação
+      void contentArea.offsetWidth;
+      contentArea.classList.add('ea-fade-in');
+    }
   }
+
 
   // ─── Painel de configuração (engrenagem) ─────────────────────────────────────
   // Contém: seleção de modelo + intervalo de auto-página.
@@ -205,13 +367,13 @@
           style="color:#f38ba8;font-size:12px;min-height:0;margin-bottom:2px;width:100%;transform: translateY(-5px);"></div>
 
         <!-- ── Ações ── -->
-        <button id="ea-model-save" style="
+        <button id="ea-model-save" class="ea-btn-animado" style="
           width:100%;padding:11px;border:none;border-radius:10px;
           background:#a6e3a1;color:#1e1e2e;font-weight:bold;
           font-size:14px;cursor:pointer;margin-bottom:8px;
         ">💾 Salvar</button>
 
-        <button id="ea-model-back" style="
+        <button id="ea-model-back" class="ea-btn-animado" style="
           width:100%;padding:10px;border:none;border-radius:10px;
           background:#45475a;color:#cdd6f4;font-weight:bold;
           font-size:13px;cursor:pointer;
@@ -286,19 +448,20 @@
     let autoPageActive = false;
     let autoPageTimer  = null;
     let quizProcessando = false;
+    let paginasLidas   = 0;
 
     function renderPainelPrincipal() {
       renderPanel(`
         <div style="display:flex;justify-content:space-between;align-items:flex-start;">
           <b style="color:#cba6f7;font-size:16px;">📘 ${bookTitle || 'Modo leitura'}</b>
-          <button id="ea-config-btn" title="Configurar modelo de IA" style="
+          <button id="ea-config-btn" class="ea-btn-icone" title="Configurar modelo de IA" style="
             background:#313244;border:none;border-radius:8px;color:#cdd6f4;
             font-size:14px;cursor:pointer;padding:4px 9px;line-height:1;
           ">⚙</button>
         </div>
         <div id="ea-status" style="font-size:14px;color:#a6adc8;">Pronto</div>
 
-        <button id="ea-auto-btn" style="
+        <button id="ea-auto-btn" class="ea-btn-animado" style="
           width:100%;padding:11px;border:none;
           border-radius:10px;background:#89b4fa;
           font-weight:bold;font-size:14px;cursor:pointer;color:#1e1e2e;
@@ -310,7 +473,7 @@
           white-space:pre-wrap;color:#a6adc8;
         "></div>
 
-        <button id="ea-reset-btn" style="
+        <button id="ea-reset-btn" class="ea-btn-animado" style="
           width:100%;padding:10px;border:none;
           border-radius:10px;background:#45475a;
           font-size:13px;font-weight:bold;cursor:pointer;color:#cdd6f4;
@@ -355,11 +518,19 @@
         setStatus('Navegando...', '#89b4fa');
         function tick() {
           if (!autoPageActive) return;
-          if (!isQuizOpen()) {
+                    if (!isQuizOpen()) {
             document.body.dispatchEvent(new KeyboardEvent('keydown', {
               key: 'ArrowRight', code: 'ArrowRight', bubbles: true
             }));
+
+            // SOMAR +1 NO CONTADOR VISUAL E ATUALIZAR O TOPO
+            paginasLidas++;
+            const contadorEl = document.getElementById('ea-page-count');
+            if (contadorEl) {
+              contadorEl.textContent = `Páginas: ${paginasLidas}`;
+            }
           }
+
           // ── Lê intervalo configurado pelo usuário ──────────────────────────
           const minMs = GM_getValue('autoMinMin', AUTO_MIN_DEFAULT) * 60000;
           const maxMs = GM_getValue('autoMaxMin', AUTO_MAX_DEFAULT) * 60000;
@@ -674,6 +845,7 @@ Se não, escolha outra.`;
 
       resetBtn.onclick = () => {
         stopAutoPage();
+        paginasLidas = 0;
         GM_setValue('apiKey', '');
         GM_setValue('bookTitle', '');
         GM_setValue('noAI', false);
