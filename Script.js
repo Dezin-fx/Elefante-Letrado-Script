@@ -72,12 +72,26 @@
     mostrarSetupApiKey();
 
     function mostrarSetupApiKey() {
+      const svgOlhoAberto = `<svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:20px; height:20px;"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>`;
+      const svgOlhoFechado = `<svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:20px; height:20px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12c1.391 4.182 5.327 7.2 9.966 7.2c1.488 0 2.896-.311 4.17-.872M21.066 12c-1.391-4.182-5.327-7.2-9.966-7.2c-1.488 0-2.896.311-4.17.872M10.477 10.477A3 3 0 0 0 13.523 13.523M13.523 10.477A3 3 0 0 1 10.477 13.523M9.172 9.172L14.828 14.828" /><path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" /></svg>`;
       renderPanel(`
-        <b style="color:#cba6f7;font-size:16px;">🔑 Configuração</b>
+        <b style="color:#cba6f7;font-size:16px;">🔑 Chave da API</b>
         <p style="margin:14px 0 8px;font-size:14px;color:#a6adc8;">Cole sua API Key do OpenRouter:</p>
-        <input id="ea-inp" type="password" placeholder="sk-or-..."
-          style="
-            width:100%;box-sizing:border-box;padding:10px 12px;border:2px solid #6c5fc7;border-radius:8px;margin:0 0 6px 0;background:#11111b;color:#cdd6f4;font-family:monospace;font-size:14px;outline:none;display:block;transform:translateY(-7px);text-align:left;">
+        <div style="position: relative; width: 100%; box-sizing: border-box; margin: 0 0 12px 0; transform: translateY(-7px);">
+          <input id="ea-inp" type="password" placeholder="sk-or-..."
+            style="
+              width:100%; box-sizing:border-box; padding:11px 42px 11px 12px;
+              border:2px solid #6c5fc7; border-radius:8px; background:#11111b;
+              color:#cdd6f4; font-family:monospace; font-size:14px; outline:none;
+              display:block; text-align:left; margin:0;
+            ">
+          <button id="ea-toggle-eye" class="ea-btn-icone" style="
+              position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+              background: none; border: none; color: #6c7086; cursor: pointer;
+              padding: 4px; display: flex; align-items: center; justify-content: center;
+              transition: color 0.2s ease;
+            " title="Mostrar/Ocultar chave">${svgOlhoFechado}</button>
+        </div>
         <div id="ea-err" style="display:none;color:#f38ba8;font-size:12px;margin-top:3px;transform:translateY(-7px);"></div>
         <button id="ea-ok" class="ea-btn-animado" style="
           width:100%;padding:11px;border:none;border-radius:10px;
@@ -90,6 +104,21 @@
           font-size:14px;cursor:pointer;
         ">Não quero usar IA</button>
       `);
+
+      const inputChave = document.getElementById('ea-inp');
+      const botaoOlho = document.getElementById('ea-toggle-eye');
+
+      botaoOlho.onclick = () => {
+        if (inputChave.type === 'password') {
+          inputChave.type = 'text';
+          botaoOlho.innerHTML = svgOlhoAberto;
+          botaoOlho.style.color = '#cba6f7';
+        } else {
+          inputChave.type = 'password';
+          botaoOlho.innerHTML = svgOlhoFechado;
+          botaoOlho.style.color = '#6c7086';
+        }
+      };
 
       document.getElementById('ea-ok').onclick = () => {
         const key = document.getElementById('ea-inp').value.trim();
@@ -195,7 +224,6 @@
           <strong style="color: #cba6f7; font-size: 13px; letter-spacing: 0.5px;"> Elefante Letrado Script</strong>
 
           <div style="display: flex; align-items: center; gap: 12px;">
-            <span id="ea-page-count" style="background: #313244; color: #a6e3a1; font-size: 11px; padding: 2px 8px; border-radius: 9999px; font-weight: bold; border: 1px solid #45475a; white-space: nowrap;">Pags: 0</span>
             <button id="ea-min-btn" class="ea-btn-icone" style="width: 24px; height: 24px; border: none; border-radius: 6px; background: #313244; color: #cdd6f4; cursor: pointer; font-size: 14px; font-weight: bold; line-height: 1;">−</button>
           </div>
         </div>
