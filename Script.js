@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Elefante Assistente de Estudo
+// @name         Elefante Letrado Script
 // @namespace    http://tampermonkey.net/
 // @match        https://reader.elefanteletrado.com.br/*
 // @grant        GM_xmlhttpRequest
