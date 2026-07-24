@@ -23,7 +23,7 @@
     { label: 'Outro (digitar manualmente)', value: '__custom__' }
   ];
 
-  // ─── Chaves GM ───────────────────────────────────────────────────────────────
+  // Chaves GM 
   // autoMinMin : intervalo mínimo de auto-página em minutos (default 2)
   // autoMaxMin : intervalo máximo de auto-página em minutos (default 3)
   // Limites de segurança: mín 0,5 min (30s) · máx 60 min (1h)
@@ -77,7 +77,7 @@
       renderPanel(`
         <b style="color:#cba6f7;font-size:16px;">🔑 Chave da API</b>
         <p style="margin:14px 0 8px;font-size:14px;color:#a6adc8;">Cole sua API Key do OpenRouter:</p>
-        <div style="position: relative; width: 100%; box-sizing: border-box; margin: 0 0 12px 0; transform: translateY(-7px);">
+        <div style="position: relative; width: 100%; box-sizing: border-box; margin: 0 0 6px 0; transform: translateY(-7px);">
           <input id="ea-inp" type="password" placeholder="sk-or-..."
             style="
               width:100%; box-sizing:border-box; padding:11px 42px 11px 12px;
@@ -92,11 +92,12 @@
               transition: color 0.2s ease;
             " title="Mostrar/Ocultar chave">${svgOlhoFechado}</button>
         </div>
-        <div id="ea-err" style="display:none;color:#f38ba8;font-size:12px;margin-top:3px;transform:translateY(-7px);"></div>
+        <div id="ea-err" style="display:none;color:#f38ba8;font-size:12px;margin:4px 0 8px;line-height:1.2;transform:translateY(-12px);"></div>
         <button id="ea-ok" class="ea-btn-animado" style="
           width:100%;padding:11px;border:none;border-radius:10px;
           background:#a6e3a1;color:#1e1e2e;font-weight:bold;
           font-size:14px;cursor:pointer;
+          margin-top: -8px;
         ">Continuar</button>
         <button id="ea-noai" class="ea-btn-animado" style="
           width:100%;padding:11px;border:none;border-radius:10px;
@@ -106,6 +107,19 @@
       `);
 
       const inputChave = document.getElementById('ea-inp');
+      const err = document.getElementById('ea-err');
+      inputChave.addEventListener('input', () => {
+          if (err.style.display === 'none') return;
+
+          err.classList.remove('ea-error-animate');
+          err.classList.add('ea-error-hide');
+
+          setTimeout(() => {
+              err.style.display = 'none';
+              err.classList.remove('ea-error-hide');
+          }, 180);
+
+      });
       const botaoOlho = document.getElementById('ea-toggle-eye');
 
       botaoOlho.onclick = () => {
@@ -122,12 +136,23 @@
 
       document.getElementById('ea-ok').onclick = () => {
         const key = document.getElementById('ea-inp').value.trim();
-        if (!key) {
-          const err = document.getElementById('ea-err');
-          err.style.display = 'block';
-          err.textContent = 'Insira uma API Key.';
-          return;
-        }
+        const err = document.getElementById('ea-err');
+
+          if (!key) {
+              err.textContent = 'Insira uma API Key.';
+              err.style.display = 'block';
+
+              err.classList.remove('ea-error-hide');
+              err.classList.remove('ea-error-animate');
+
+              void err.offsetWidth;
+
+              err.classList.add('ea-error-animate');
+              return;
+          }
+
+        err.style.opacity = '0';
+        err.style.visibility = 'hidden';
         GM_setValue('apiKey', key);
         iniciarPrincipal(key, nomeAutomatico);
       };
@@ -139,7 +164,7 @@
     }
   }
 
-    // ─── NOVA FUNÇÃO RENDERPANEL (FLUTUANTE E ARRASTÁVEL) ───────────────────────
+    // NOVA FUNÇÃO RENDERPANEL (FLUTUANTE E ARRASTÁVEL) 
   function renderPanel(html) {
     let panel = document.getElementById('ea-panel');
 
@@ -169,8 +194,7 @@
         .ea-btn-icone:active {
           transform: scale(0.92);
         }
-
-         @keyframes eaFadeKeyframe {
+        @keyframes eaFadeKeyframe {
           from {
             opacity: 0;
             transform: translateY(8px);
@@ -180,6 +204,47 @@
             transform: translateY(0);
           }
         }
+        @keyframes eaFadeUp {
+         from {
+          opacity: 0;
+          transform: translateY(6px);
+         }
+         to {
+          opacity: 1;
+          transform: translateY(0);
+         }
+        }
+       @keyframes eaErrorIn {
+        from {
+         opacity: 0;
+         transform: translateY(-6px);
+       }
+       to {
+        opacity: 1;
+        transform: translateY(-11px);
+       }
+      }
+
+.ea-error-animate {
+  animation: eaErrorIn 0.18s cubic-bezier(.22,1,.36,1);
+}
+       @keyframes eaErrorOut {
+        from {
+          opacity: 1;
+          transform: translateY(-11px);
+        }
+        to {
+         opacity: 0;
+         transform: translateY(-6px);
+        }
+      }
+
+       .ea-error-hide {
+         animation: eaErrorOut 0.18s cubic-bezier(.22,1,.36,1) forwards;
+      }
+       .ea-error-show {
+         animation: eaFadeUp 0.18s cubic-bezier(.22,1,.36,1) forwards;
+       }
         .ea-fade-in {
           animation: eaFadeKeyframe 0.25s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
         }
@@ -206,7 +271,7 @@
         flex-direction: column;
       `;
 
-            // Define a barra de título com o contador jogado para o canto direito, ao lado do botão -
+            // Define a barra de título com o botão de minimizar no canto direito
       panel.innerHTML = `
         <div id="ea-drag-header" style="
           cursor: move;
@@ -230,7 +295,7 @@
         <div id="ea-panel-content" style="
           display: flex;
           flex-direction: column;
-          gap: 12px;
+          gap: 10px;
           background: #1e1e2e;
           margin: -12px -20px -20px -20px;
           padding: 24px 20px 20px 20px;
@@ -243,7 +308,7 @@
 
       document.body.appendChild(panel);
 
-      // ── LÓGICA DE ARRASTAR (DRAG & DROP) ──
+      //  LÓGICA DE ARRASTAR (DRAG & DROP)
       let isDragging = false, offsetX, offsetY;
       const header = document.getElementById("ea-drag-header");
 
@@ -284,7 +349,7 @@
       // Quando solta o clique do mouse em qualquer lugar da tela
       document.addEventListener('mouseup', () => { isDragging = false; });
 
-      // ── LÓGICA DE MINIMIZAR ──
+      //  LÓGICA DE MINIMIZAR 
       let minimized = false;
       const minBtn = document.getElementById("ea-min-btn");
       const contentArea = document.getElementById("ea-panel-content");
@@ -301,7 +366,7 @@
       };
     }
 
-    // MIOLO DINÂMICO: Alimenta apenas a região de conteúdo, mantendo o cabeçalho e os eventos intactos
+    // Alimenta apenas a região de conteúdo, mantendo o cabeçalho e os eventos intactos
     const contentArea = document.getElementById('ea-panel-content');
     if (contentArea) {
       // 1. Remove a classe para resetar o efeito
@@ -317,7 +382,7 @@
   }
 
 
-  // ─── Painel de configuração (engrenagem) ─────────────────────────────────────
+  // Painel de configuração (engrenagem)
   // Contém: seleção de modelo + intervalo de auto-página.
   function abrirConfigModelo(onVoltar) {
     const modeloSalvo  = getModeloAtual();
@@ -335,7 +400,7 @@
 
         <b style="color:#cba6f7;font-size:16px;">⚙ Configurações</b>
 
-        <!-- ── Modelo ── -->
+        <!--  Modelo  -->
         <p style="
           margin:14px 0 6px;font-size:15px;color:#a6adc8;
           width:100%;text-align:left;
@@ -363,10 +428,10 @@
              style="color:#89b4fa;text-decoration:none;">openrouter.ai/models</a>
         </div>
 
-        <!-- ── Divider ── -->
+        <!--  Divider  -->
         <div style="width:100%;border-top:1px solid #313244;margin:14px 0;"></div>
 
-        <!-- ── Intervalo de auto-página ── -->
+        <!--  Intervalo de auto-página  -->
         <p style="
           margin:0 0 8px;font-size:15px;color:#a6adc8;
           width:100%;text-align:left;
@@ -394,7 +459,7 @@
         <div id="ea-interval-err"
           style="color:#f38ba8;font-size:12px;min-height:0;margin-bottom:2px;width:100%;transform: translateY(-5px);"></div>
 
-        <!-- ── Ações ── -->
+        <!-- Ações -->
         <button id="ea-model-save" class="ea-btn-animado" style="
           width:100%;padding:11px;border:none;border-radius:10px;
           background:#a6e3a1;color:#1e1e2e;font-weight:bold;
@@ -429,7 +494,7 @@
     }
 
     saveBtn.onclick = () => {
-      // ── Validar modelo ──
+      // Validar modelo
       let novoModelo;
       if (selectEl.value === '__custom__') {
         novoModelo = customEl.value.trim();
@@ -438,7 +503,7 @@
         novoModelo = selectEl.value;
       }
 
-      // ── Validar intervalo ──
+      //  Validar intervalo
       const minVal = parseMinutos(minInput.value);
       const maxVal = parseMinutos(maxInput.value);
 
@@ -461,7 +526,7 @@
 
       intervalErr.textContent = '';
 
-      // ── Persistir ──
+      // Persistir 
       GM_setValue('selectedModel', novoModelo);
       GM_setValue('autoMinMin', minVal);
       GM_setValue('autoMaxMin', maxVal);
@@ -476,7 +541,6 @@
     let autoPageActive = false;
     let autoPageTimer  = null;
     let quizProcessando = false;
-    let paginasLidas   = 0;
 
     function renderPainelPrincipal() {
       renderPanel(`
@@ -527,7 +591,7 @@
         });
       };
 
-      // ─── Auto-page ───────────────────────────────────────────────────────────
+      //  Auto-page 
       function isQuizOpen() {
         const modal = document.querySelector('ngb-modal-window.quiz-modal') ||
                       document.querySelector('[role="dialog"]');
@@ -550,16 +614,9 @@
             document.body.dispatchEvent(new KeyboardEvent('keydown', {
               key: 'ArrowRight', code: 'ArrowRight', bubbles: true
             }));
-
-            // SOMAR +1 NO CONTADOR VISUAL E ATUALIZAR O TOPO
-            paginasLidas++;
-            const contadorEl = document.getElementById('ea-page-count');
-            if (contadorEl) {
-              contadorEl.textContent = `Páginas: ${paginasLidas}`;
-            }
           }
 
-          // ── Lê intervalo configurado pelo usuário ──────────────────────────
+          //  Lê intervalo configurado pelo usuário 
           const minMs = GM_getValue('autoMinMin', AUTO_MIN_DEFAULT) * 60000;
           const maxMs = GM_getValue('autoMaxMin', AUTO_MAX_DEFAULT) * 60000;
           const delay = Math.random() * (maxMs - minMs) + minMs;
@@ -577,13 +634,13 @@
         setStatus('Pronto');
       }
 
-      // ─── Modal ───────────────────────────────────────────────────────────────
+      //  Modal
       function getModal() {
         return document.querySelector('ngb-modal-window.quiz-modal') ||
                document.querySelector('[role="dialog"]');
       }
 
-      // ─── Tela final ──────────────────────────────────────────────────────────
+      //  Tela final 
       function detectarTelaFinal() {
         const modal = getModal();
         if (!modal) return null;
@@ -594,7 +651,7 @@
         return todosFund2.find(b => b.textContent.includes('Continuar')) || null;
       }
 
-      // ─── Extração do quiz ────────────────────────────────────────────────────
+      //  Extração do quiz 
       function extrair() {
         const modal = getModal();
         if (!modal) return null;
@@ -639,7 +696,7 @@
         return { tipo: 'multipla', pergunta, opcoes: opcoes.slice(0, 4) };
       }
 
-      // ─── Chamada IA ──────────────────────────────────────────────────────────
+      // Chamada IA
       function perguntarIA(q) {
         const modeloAtual = getModeloAtual();
 
@@ -731,7 +788,7 @@ Se não, escolha outra.`;
         });
       }
 
-      // ─── Dissertativa ────────────────────────────────────────────────────────
+      // Dissertativa 
       function colarResposta(texto) {
         const modal = getModal();
         if (!modal) return;
@@ -791,7 +848,7 @@ Se não, escolha outra.`;
           setStatus('Próxima!', '#a6e3a1');
       }
 
-      // ─── Run ─────────────────────────────────────────────────────────────────
+      //  Run 
       async function run() {
         if (quizProcessando) return;
         quizProcessando = true;
@@ -862,7 +919,7 @@ Se não, escolha outra.`;
         }
       }
 
-      // ─── Botões ──────────────────────────────────────────────────────────────
+      // Botões
       autoBtn.addEventListener('click', () => {
         if (autoPageActive) {
           stopAutoPage();
@@ -873,7 +930,6 @@ Se não, escolha outra.`;
 
       resetBtn.onclick = () => {
         stopAutoPage();
-        paginasLidas = 0;
         GM_setValue('apiKey', '');
         GM_setValue('bookTitle', '');
         GM_setValue('noAI', false);
@@ -882,7 +938,7 @@ Se não, escolha outra.`;
         init();
       };
 
-      // ─── MutationObserver ────────────────────────────────────────────────────
+      // MutationObserver 
       setStatus(
         apiKey ? '🛈 Modo com IA ativa' : 'ⓘ Modo de apenas leitura',
         apiKey ? '#a6e3a1' : '#f9e2af'
