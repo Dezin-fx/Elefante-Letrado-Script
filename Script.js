@@ -72,36 +72,54 @@
     mostrarSetupApiKey();
 
     function mostrarSetupApiKey() {
+      const svgChave = `
+        <svg xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="22"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#f9e2af"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        style="transform:scaleX(-1); transform-origin:center;">
+          <path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/>
+          <circle cx="16.5" cy="7.5" r=".5" fill="#f9e2af"/>
+        </svg>`;
       const svgOlhoAberto = `<svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:20px; height:20px;"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>`;
       const svgOlhoFechado = `<svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:20px; height:20px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 1.934 12c1.391 4.182 5.327 7.2 9.966 7.2c1.488 0 2.896-.311 4.17-.872M21.066 12c-1.391-4.182-5.327-7.2-9.966-7.2c-1.488 0-2.896.311-4.17.872M10.477 10.477A3 3 0 0 0 13.523 13.523M13.523 10.477A3 3 0 0 1 10.477 13.523M9.172 9.172L14.828 14.828" /><path stroke-linecap="round" stroke-linejoin="round" d="M3 3l18 18" /></svg>`;
       renderPanel(`
-        <b style="color:#cba6f7;font-size:16px;">🔑 Chave da API</b>
-        <p style="margin:14px 0 8px;font-size:14px;color:#a6adc8;">Cole sua API Key do OpenRouter:</p>
+        <b style="color:#cba6f7;font-family: 'Manrope', sans-serif;font-weight: 700;font-size:16px;display:flex;align-items:center;gap:8px;">${svgChave} Chave da API</b>
+        <p style="font-family: 'Inter', sans-serif;font-weight:400;margin:14px 0 8px;font-size:14px;color:#a6adc8;">Cole sua API Key do OpenRouter:</p>
         <div style="position: relative; width: 100%; box-sizing: border-box; margin: 0 0 6px 0; transform: translateY(-7px);">
           <input id="ea-inp" type="password" placeholder="sk-or-..."
             style="
               width:100%; box-sizing:border-box; padding:11px 42px 11px 12px;
               border:2px solid #6c5fc7; border-radius:8px; background:#11111b;
-              color:#cdd6f4; font-family:monospace; font-size:14px; outline:none;
+              color:#cdd6f4; font-family:'Inter', sans-serif; font-weight:500; letter-spacing:0.8px; font-size:14px; outline:none;
               display:block; text-align:left; margin:0;
             ">
-          <button id="ea-toggle-eye" class="ea-btn-icone" style="
+          <button id="ea-toggle-eye" class="ea-eye-btn" style="
               position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
               background: none; border: none; color: #6c7086; cursor: pointer;
               padding: 4px; display: flex; align-items: center; justify-content: center;
               transition: color 0.2s ease;
             " title="Mostrar/Ocultar chave">${svgOlhoFechado}</button>
         </div>
-        <div id="ea-err" style="display:none;color:#f38ba8;font-size:12px;margin:4px 0 8px;line-height:1.2;transform:translateY(-12px);"></div>
+        <div id="ea-err" class="ea-error-box" style="width:100%;color:#f38ba8;font-size:12px;line-height:1.2;transform:translateY(-15px);"></div>
         <button id="ea-ok" class="ea-btn-animado" style="
           width:100%;padding:11px;border:none;border-radius:10px;
-          background:#a6e3a1;color:#1e1e2e;font-weight:bold;
+          font-family: 'Manrope', sans-serif;
+          font-weight:700;
+          background:#a6e3a1;color:#1e1e2e;
           font-size:14px;cursor:pointer;
-          margin-top: -8px;
+          margin-top: -12px;
         ">Continuar</button>
         <button id="ea-noai" class="ea-btn-animado" style="
           width:100%;padding:11px;border:none;border-radius:10px;
-          background:#313244;color:#cdd6f4;font-weight:bold;
+          font-weight:600;
+          background:#313244;color:#cdd6f4;
           font-size:14px;cursor:pointer;
         ">Não quero usar IA</button>
       `);
@@ -109,27 +127,34 @@
       const inputChave = document.getElementById('ea-inp');
       const err = document.getElementById('ea-err');
       inputChave.addEventListener('input', () => {
-          if (err.style.display === 'none') return;
+          if (!err.classList.contains('show')) return;
 
-          err.classList.remove('ea-error-animate');
-          err.classList.add('ea-error-hide');
-
-          setTimeout(() => {
-              err.style.display = 'none';
-              err.classList.remove('ea-error-hide');
-          }, 180);
-
+          err.classList.remove('show');
       });
       const botaoOlho = document.getElementById('ea-toggle-eye');
 
       botaoOlho.onclick = () => {
+        const trocarIcone = (novoSvg) => {
+          botaoOlho.classList.add('trocando');
+          setTimeout(() => {
+            botaoOlho.innerHTML = novoSvg;
+            botaoOlho.classList.remove('trocando');
+
+            // reinicia a animação de entrada
+            void botaoOlho.offsetWidth;
+            botaoOlho.classList.add('voltando');
+            setTimeout(() => {
+              botaoOlho.classList.remove('voltando');
+            }, 350);
+          }, 150);
+        };
         if (inputChave.type === 'password') {
           inputChave.type = 'text';
-          botaoOlho.innerHTML = svgOlhoAberto;
-          botaoOlho.style.color = '#cba6f7';
+          trocarIcone(svgOlhoAberto);
+         botaoOlho.style.color = '#cba6f7';
         } else {
           inputChave.type = 'password';
-          botaoOlho.innerHTML = svgOlhoFechado;
+          trocarIcone(svgOlhoFechado);
           botaoOlho.style.color = '#6c7086';
         }
       };
@@ -140,14 +165,7 @@
 
           if (!key) {
               err.textContent = 'Insira uma API Key.';
-              err.style.display = 'block';
-
-              err.classList.remove('ea-error-hide');
-              err.classList.remove('ea-error-animate');
-
-              void err.offsetWidth;
-
-              err.classList.add('ea-error-animate');
+              err.classList.add('show');
               return;
           }
 
@@ -170,30 +188,116 @@
 
     // Se o painel ainda não existe na página, cria a CASCA FIXA uma única vez
     if (!panel) {
+      const fontes = document.createElement('link');
+        fontes.rel = 'stylesheet';
+        fontes.href = `
+          https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700
+          &family=Manrope:wght@400;500;600;700
+          &family=Plus+Jakarta+Sans:wght@400;500;600;700
+          &family=Nunito+Sans:wght@400;500;600;700
+          &display=swap
+        `;
+        document.head.appendChild(fontes);
         // INJETAR FOLHA DE ESTILOS PARA ANIMAÇÕES SUAVES
-        const estiloAnimacoes = document.createElement('style');
+      const estiloAnimacoes = document.createElement('style');
       estiloAnimacoes.textContent = `
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@800&display=swap');
+        .ea-eye-btn {
+          transition:
+            color .2s ease,
+            filter .2s ease !important;
+        }
+
+        .ea-eye-btn:hover {
+          color: #cba6f7 !important;
+          filter: drop-shadow(0 0 5px rgba(203,166,247,.35));
+        }
+
+        .ea-eye-btn svg {
+          transition:
+            transform .25s cubic-bezier(.22,1,.36,1),
+            opacity .18s ease;
+        }
+
+        .ea-eye-btn:hover svg {
+          transform: scale(1.12);
+        }
+
+        .ea-eye-btn:active svg {
+          transform: scale(.92);
+        }
+
+        /* estado durante a troca */
+        .ea-eye-btn.trocando svg {
+          transform:
+            scale(0.45)
+            rotate(-25deg);
+          opacity: 0;
+        }
+
+        /* pequeno efeito quando volta */
+        .ea-eye-btn.voltando svg {
+          animation: eaEyeReturn .35s cubic-bezier(.22,1,.36,1);
+        }
+
+        @keyframes eaEyeReturn {
+
+          0% {
+            transform: scale(.45) rotate(25deg);
+            opacity: 0;
+          }
+
+          60% {
+            transform: scale(1.12) rotate(-5deg);
+            opacity: 1;
+          }
+
+          100% {
+            transform: scale(1) rotate(0deg);
+            opacity: 1;
+          }
+
+        }
+
         .ea-btn-animado {
           transition: background-color 0.2s ease, transform 0.1s ease, filter 0.2s ease !important;
         }
+
         .ea-btn-animado:hover {
           filter: brightness(1.1);
           transform: translateY(-1px);
         }
+
         .ea-btn-animado:active {
           transform: translateY(1px) scale(0.98);
         }
 
         .ea-btn-icone {
-          transition: background-color 0.2s ease, transform 0.1s ease, color 0.2s ease !important;
+          transition:
+            background-color .2s ease,
+            color .2s ease,
+            filter .2s ease !important;
         }
+
         .ea-btn-icone:hover {
-          background-color: #45475a !important;
-          color: #f5e0dc !important;
+          background-color: transparent !important;
+          color: #cba6f7 !important;
+          filter: drop-shadow(0 0 5px rgba(203,166,247,.35));
         }
-        .ea-btn-icone:active {
-          transform: scale(0.92);
+
+        .ea-config-btn svg {
+          transform: translateY(1px);
+          transition: transform .3s cubic-bezier(.22,1,.36,1);
         }
+
+        .ea-config-btn:hover svg {
+          transform: translateY(1px) rotate(60deg);
+        }
+
+        .ea-config-btn:active svg {
+          transform: translateY(1px) rotate(90deg) scale(.94);
+        }
+
         @keyframes eaFadeKeyframe {
           from {
             opacity: 0;
@@ -204,6 +308,7 @@
             transform: translateY(0);
           }
         }
+
         @keyframes eaFadeUp {
          from {
           opacity: 0;
@@ -214,40 +319,82 @@
           transform: translateY(0);
          }
         }
-       @keyframes eaErrorIn {
-        from {
-         opacity: 0;
-         transform: translateY(-6px);
-       }
-       to {
-        opacity: 1;
-        transform: translateY(-11px);
-       }
-      }
 
-.ea-error-animate {
-  animation: eaErrorIn 0.18s cubic-bezier(.22,1,.36,1);
-}
-       @keyframes eaErrorOut {
-        from {
-          opacity: 1;
-          transform: translateY(-11px);
-        }
-        to {
-         opacity: 0;
-         transform: translateY(-6px);
-        }
-      }
+        @keyframes eaTitleGlow {
+          0%,100% {
+            text-shadow:
+              0 0 4px rgba(183,148,246,0.30),
+              0 0 10px rgba(183,148,246,0.16);
+          }
 
-       .ea-error-hide {
-         animation: eaErrorOut 0.18s cubic-bezier(.22,1,.36,1) forwards;
-      }
+          50% {
+            text-shadow:
+              0 0 5px rgba(183,148,246,0.40),
+              0 0 14px rgba(183,148,246,0.22);
+          }
+        }
+
+       .ea-error-box {
+          overflow: hidden;
+          max-height: 0;
+          opacity: 0;
+          transform: translateY(-6px);
+          transition:
+            max-height 0.22s cubic-bezier(.22,1,.36,1),
+            opacity 0.18s ease,
+            transform 0.22s cubic-bezier(.22,1,.36,1),
+            margin 0.22s ease;
+          margin-top: 0;
+        }
+
+        .ea-error-box.show {
+            max-height: 30px;
+            opacity: 1;
+            transform: translateY(-11px);
+            margin-top: 4px;
+        }
+
        .ea-error-show {
          animation: eaFadeUp 0.18s cubic-bezier(.22,1,.36,1) forwards;
        }
+
         .ea-fade-in {
           animation: eaFadeKeyframe 0.25s cubic-bezier(0.25, 1, 0.5, 1) forwards !important;
         }
+
+       .ea-panel-content {
+         overflow: hidden;
+           transition:
+             max-height 0.25s cubic-bezier(.25,1,.5,1),
+             opacity 0.2s ease,
+             padding 0.25s ease,
+             margin 0.25s ease;
+             opacity 0.2s ease,
+             padding 0.25s ease;
+             display: flex;
+             flex-direction: column;
+             gap: 10px;
+             background: #1e1e2e;
+             margin: -12px -20px -20px -20px;
+             padding: 24px 20px 20px 20px;
+             border-radius: 18px 18px 12px 12px;
+             position: relative;
+             z-index: 2;
+             box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.3);
+       }
+
+      .ea-minimizing {
+        max-height: 0 !important;
+        opacity: 0;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        margin-bottom: 0 !important;
+      }
+
+     .ea-maximizing {
+       max-height: 500px;
+       opacity: 1;
+     }
       `;
       document.head.appendChild(estiloAnimacoes);
 
@@ -286,13 +433,13 @@
           position: relative;
           z-index: 1;
         ">
-          <strong style="color: #cba6f7; font-size: 13px; letter-spacing: 0.5px;"> Elefante Letrado Script</strong>
+          <strong style="color:#af74f0;font-family: 'Outfit', sans-serif;font-weight:700;font-size: 16px;animation:eaTitleGlow 4s ease-in-out infinite;letter-spacing:-0.2px;"> Elefante Letrado Script</strong>
 
           <div style="display: flex; align-items: center; gap: 12px;">
             <button id="ea-min-btn" class="ea-btn-icone" style="width: 24px; height: 24px; border: none; border-radius: 6px; background: #313244; color: #cdd6f4; cursor: pointer; font-size: 14px; font-weight: bold; line-height: 1;">−</button>
           </div>
         </div>
-        <div id="ea-panel-content" style="
+        <div id="ea-panel-content" class="ea-panel-content" style="
           display: flex;
           flex-direction: column;
           gap: 10px;
@@ -349,21 +496,31 @@
       // Quando solta o clique do mouse em qualquer lugar da tela
       document.addEventListener('mouseup', () => { isDragging = false; });
 
-      //  LÓGICA DE MINIMIZAR 
-      let minimized = false;
-      const minBtn = document.getElementById("ea-min-btn");
-      const contentArea = document.getElementById("ea-panel-content");
+      // ── LÓGICA DE MINIMIZAR ──
+        let minimized = false;
+        const minBtn = document.getElementById("ea-min-btn");
+        const contentArea = document.getElementById("ea-panel-content");
 
-      minBtn.onclick = () => {
-        minimized = !minimized;
-        if (minimized) {
-          contentArea.style.display = "none";
-          minBtn.textContent = "+";
-        } else {
-          contentArea.style.display = "flex";
-          minBtn.textContent = "−";
-        }
-      };
+        minBtn.onclick = () => {
+            minimized = !minimized;
+            if (minimized) {
+                contentArea.classList.remove('ea-maximizing');
+                contentArea.classList.add('ea-minimizing');
+
+                panel.style.paddingBottom = "20px";
+                minBtn.textContent = "+";
+            } else {
+                contentArea.style.display = "flex";
+                contentArea.classList.remove('ea-minimizing');
+
+                void contentArea.offsetHeight;
+                contentArea.classList.add('ea-maximizing');
+
+                panel.style.paddingBottom = "20px";
+
+                minBtn.textContent = "−";
+            }
+        };
     }
 
     // Alimenta apenas a região de conteúdo, mantendo o cabeçalho e os eventos intactos
@@ -385,6 +542,19 @@
   // Painel de configuração (engrenagem)
   // Contém: seleção de modelo + intervalo de auto-página.
   function abrirConfigModelo(onVoltar) {
+    const svgVoltar = `
+      <svg xmlns="http://www.w3.org/2000/svg"
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round">
+        <path d="M19 12H5"/>
+        <path d="M12 19l-7-7 7-7"/>
+      </svg>`;
     const modeloSalvo  = getModeloAtual();
     const ehCurado     = MODELOS_CURADOS.some(m => m.value === modeloSalvo);
     const autoMinSalvo = GM_getValue('autoMinMin', AUTO_MIN_DEFAULT);
@@ -394,14 +564,31 @@
       const selected = (m.value === modeloSalvo) ? 'selected' : '';
       return `<option value="${m.value}" ${selected}>${m.label}</option>`;
     }).join('');
-
+    const svgConfig = `
+    <svg xmlns="http://www.w3.org/2000/svg"
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    style="transform:translateY(-1px);">
+      <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>`;
     renderPanel(`
       <div style="display:flex;flex-direction:column;align-items:center;">
 
-        <b style="color:#cba6f7;font-size:16px;">⚙ Configurações</b>
+        <b style="color:#cba6f7;font-family:'Manrope', sans-serif;font-weight:700;letter-spacing:0.2px;font-size:16px;display:flex;align-items:center;gap:8px;">${svgConfig} Configurações</b>
 
         <!--  Modelo  -->
         <p style="
+          font-family: 'Inter', sans-serif;
+          font-weight: 600;
+          letter-spacing:0.2px;
+          transform:translateY(9px);
           margin:14px 0 6px;font-size:15px;color:#a6adc8;
           width:100%;text-align:left;
         ">Modelo de IA:</p>
@@ -435,7 +622,10 @@
         <p style="
           margin:0 0 8px;font-size:15px;color:#a6adc8;
           width:100%;text-align:left;
-          transform:translateY(4px);
+          font-family: 'Inter', sans-serif;
+          font-weight: 600;
+          letter-spacing:0.3px;
+          transform:translateY(9px);
         ">Intervalo de auto-página (minutos):</p>
 
         <div style="display:flex;align-items:center;gap:10px;width:100%;margin-bottom:4px;">
@@ -446,7 +636,7 @@
             background:#11111b;color:#cdd6f4;font-family:Inter,sans-serif;font-size:15px;
             font-weight:500;line-height:48px;text-align:center;box-sizing:border-box;outline:none;
           ">
-          <span style="color:#a6adc8;font-size:15px;flex-shrink:0;">a</span>
+          <span style="color:#a6adc8;font-weight:600;font-family: 'Manrope', sans-serif;font-size:15px;flex-shrink:0;">a</span>
           <input id="ea-max-input" type="text" inputmode="decimal"
             placeholder="${AUTO_MAX_DEFAULT}" value="${autoMaxSalvo}"
             style="
@@ -462,15 +652,18 @@
         <!-- Ações -->
         <button id="ea-model-save" class="ea-btn-animado" style="
           width:100%;padding:11px;border:none;border-radius:10px;
-          background:#a6e3a1;color:#1e1e2e;font-weight:bold;
+          background:#a6e3a1;color:#1e1e2e;font-weight:700;font-family: 'Manrope', sans-serif;
           font-size:14px;cursor:pointer;margin-bottom:8px;
         ">💾 Salvar</button>
 
         <button id="ea-model-back" class="ea-btn-animado" style="
           width:100%;padding:10px;border:none;border-radius:10px;
-          background:#45475a;color:#cdd6f4;font-weight:bold;
-          font-size:13px;cursor:pointer;
-        ">← Voltar</button>
+          background:#45475a;color:#cdd6f4;font-family:'Inter',sans-serif;
+          font-weight:600;font-size:13px;cursor:pointer;
+          display:flex;align-items:center;justify-content:center;gap:8px;
+        ">
+          ${svgVoltar} Voltar
+        </button>
 
       </div>
     `);
@@ -543,18 +736,31 @@
     let quizProcessando = false;
 
     function renderPainelPrincipal() {
+      const svgLivro = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-open-icon lucide-book-open"><path d="M12 5v16"/><path d="M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z"/></svg>`;
+      const svgConfig = `<svg xmlns="http://www.w3.org/2000/svg"
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class="lucide lucide-settings-icon lucide-settings">
+      <path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/>
+      <circle cx="12" cy="12" r="3"/></svg>`;
       renderPanel(`
         <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-          <b style="color:#cba6f7;font-size:16px;">📘 ${bookTitle || 'Modo leitura'}</b>
-          <button id="ea-config-btn" class="ea-btn-icone" title="Configurar modelo de IA" style="
-            background:#313244;border:none;border-radius:8px;color:#cdd6f4;
-            font-size:14px;cursor:pointer;padding:4px 9px;line-height:1;
-          ">⚙</button>
+          <b style="color:#cba6f7;font-family: 'Plus Jakarta Sans', sans-serif;font-size:15px;letter-spacing: 0.3px;font-weight:600;display:flex;align-items:center;gap:8px;">${svgLivro} ${bookTitle || 'Modo leitura'}</b>
+          <button id="ea-config-btn" class="ea-btn-icone ea-config-btn" title="Configurações" style="background:#313244;border:none;border-radius:8px;color:#cdd6f4;cursor:pointer;padding:6px;display:flex;align-items:center;justify-content:center;">${svgConfig}</button>
         </div>
-        <div id="ea-status" style="font-size:14px;color:#a6adc8;">Pronto</div>
+        <div id="ea-status" style="font-size:14px;color:#a6adc8;font-family:'Nunito Sans', sans-serif;font-weight:500;letter-spacing:0.2px;">Pronto</div>
 
         <button id="ea-auto-btn" class="ea-btn-animado" style="
           width:100%;padding:11px;border:none;
+          font-family: 'Manrope', sans-serif;
+          font-weight:700;
           border-radius:10px;background:#89b4fa;
           font-weight:bold;font-size:14px;cursor:pointer;color:#1e1e2e;
           transform:translateY(5px);
@@ -567,6 +773,8 @@
 
         <button id="ea-reset-btn" class="ea-btn-animado" style="
           width:100%;padding:10px;border:none;
+          font-weight:600;
+          font-family: 'Inter', sans-serif;
           border-radius:10px;background:#45475a;
           font-size:13px;font-weight:bold;cursor:pointer;color:#cdd6f4;
         ">⚙ Reconfigurar</button>
