@@ -4,8 +4,6 @@
 ![Platform](https://img.shields.io/badge/platform-browser-blue)
 ![Type](https://img.shields.io/badge/type-userscript-yellow)
 
----
-
 
 # ⚠️ AVISO IMPORTANTE — SISTEMA MODULAR EM TESTE ⚠️
 
