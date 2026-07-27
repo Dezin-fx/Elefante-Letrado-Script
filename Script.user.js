@@ -131,21 +131,19 @@
                 }
             }
 
-            // 5. Injeta o Runtime no DOM da página
+            // 5. Injeta o payload (manifest + código dos módulos) como script na página.
+            //    Isso cruza a barreira sandbox→página de forma segura via JSON serializado.
+            //    O Runtime vai detectar esse payload ao ser carregado e auto-inicializar.
+            console.log('[🐘 Bootloader] Injetando payload no DOM...');
+            const payloadJson = JSON.stringify({ manifest, moduleCodes });
+            injectScript(`window.__ElefanteBootPayload = ${payloadJson};`, 'elefante-payload');
+
+            // 6. Injeta o Runtime — ele detecta __ElefanteBootPayload e executa bootFromModules
+            //    automaticamente, tudo dentro do contexto da página (sem cruzar o sandbox).
             console.log('[🐘 Bootloader] Injetando Runtime no DOM...');
             injectScript(runtimeCode, 'elefante-runtime');
 
-            // 6. Aguarda o Runtime registrar-se no window.ElefanteRuntime
-            //    (a injeção de <script> é síncrona, mas deixamos um tick de segurança)
-            await new Promise(r => setTimeout(r, 50));
-
-            if (!window.ElefanteRuntime) {
-                throw new Error('window.ElefanteRuntime não encontrado após injeção do Runtime.');
-            }
-
-            // 7. Entrega manifesto + códigos para o Runtime inicializar os módulos
-            console.log('[🐘 Bootloader] Iniciando bootFromModules...');
-            await window.ElefanteRuntime.bootFromModules(manifest, moduleCodes);
+            console.log('[🐘 Bootloader] Runtime injetado. Boot em andamento na página...');
 
         } catch (err) {
             console.error('[🐘 Bootloader] ❌ FATAL:', err.message, err);
