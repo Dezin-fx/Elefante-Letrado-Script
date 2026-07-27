@@ -6,11 +6,13 @@
 
 ---
 
+
 # ⚠️ AVISO IMPORTANTE — SISTEMA MODULAR EM TESTE ⚠️
 
 > **O `Script.user.js` e o repositório `Elefante-Assistente-Releases` estão atualmente em fase de testes e NÃO representam a versão principal ou estável do projeto.**
 
 O desenvolvimento principal do **Elefante Assistente de Estudo** continua sendo realizado neste repositório, utilizando o arquivo:
+
 
 
 ---
