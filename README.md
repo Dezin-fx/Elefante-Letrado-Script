@@ -6,6 +6,14 @@
 
 ---
 
+# ⚠️ AVISO IMPORTANTE — SISTEMA MODULAR EM TESTE ⚠️
+
+> **O `Script.user.js` e o repositório `Elefante-Assistente-Releases` estão atualmente em fase de testes e NÃO representam a versão principal ou estável do projeto.**
+
+O desenvolvimento principal do **Elefante Assistente de Estudo** continua sendo realizado neste repositório, utilizando o arquivo:
+
+
+---
 #  Sobre o projeto
 
 O **Elefante Letrado Automático** é um userscript para **Tampermonkey** que adiciona recursos de automação e assistência à plataforma Elefante Letrado.
