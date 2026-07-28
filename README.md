@@ -7,11 +7,11 @@
 
 # ⚠️ AVISO IMPORTANTE — SISTEMA MODULAR EM TESTE ⚠️
 
-> **O `Script.user.js` e o repositório `Elefante-Assistente-Releases` estão atualmente em fase de testes e NÃO representam a versão principal ou estável do projeto.**
+> **O `Script.user.js` e o repositório `Elefante-Letrado-Script-Releases` estão atualmente em fase de testes e NÃO representam a versão principal ou estável do projeto.**
 
 O desenvolvimento principal do **Elefante Letrado Script** continua sendo realizado neste repositório, utilizando o arquivo [Script.js](https://github.com/Dezin-fx/Elefante-Letrado-Script/blob/main/Script.js)
 
-O arquivo [Script.user.js](https://github.com/Dezin-fx/Elefante-Letrado-Script/blob/main/Script.user.js) e o repositório [Elefante-Assistente-Releases](https://github.com/Dezin-fx/Elefante-Assistente-Releases) 
+O arquivo [Script.user.js](https://github.com/Dezin-fx/Elefante-Letrado-Script/blob/main/Script.user.js) e o repositório [Elefante-Letradp-Script-Releases](https://github.com/Dezin-fx/Elefante-Letrado-Script-Releases) 
 fazem parte de uma **prova de conceito (POC)** para testar uma nova arquitetura modular de carregamento dinâmico do userscript.
 
 Essa nova arquitetura tem como objetivo futuro permitir:
@@ -30,7 +30,7 @@ Porém, neste momento, esses componentes ainda estão em desenvolvimento e podem
 - mudanças de estrutura sem aviso prévio;
 - perda de configurações ou dados locais durante testes.
 
-**Não utilize o `Script.user.js` ou o repositório `-Assistente-Releases` como versão definitiva.**
+**Não utilize o `Script.user.js` ou o repositório `Script-Releases` como versão definitiva.**
 
 Caso esteja procurando a versão funcional e em desenvolvimento ativo, utilize o código presente neste repositório, principalmente o arquivo `script.js`
 
@@ -46,7 +46,7 @@ A migração para a arquitetura modular será realizada gradualmente após a con
 🟡 `Script.user.js`  
 → Loader experimental da arquitetura modular.
 
-🟡 `-Assistente-Releases`  
+🟡 `Script-Releases`  
 → Repositório experimental para distribuição de módulos e versões.
 
 🔴 Nenhum dos componentes modulares deve ser considerado uma release estável neste momento.
