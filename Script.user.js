@@ -51,7 +51,7 @@
             // de rede passarão pelo bootloader no futuro.
             xmlhttpRequest: (details) => GM_xmlhttpRequest(details)
         };
-        console.log('[🐘 Bootloader] GM Bridge injetada no window.');
+        console.log('[Bootloader] GM Bridge injetada no window.');
     }
 
     // ------------------------------------------------------------------
@@ -97,23 +97,23 @@
     // Boot principal
     // ------------------------------------------------------------------
     async function boot() {
-        console.log(`[🐘 Bootloader] v${LOADER_VERSION} iniciando...`);
+        console.log(`[Bootloader] v${LOADER_VERSION} iniciando...`);
 
         try {
             // 1. Injeta a GM Bridge no window ANTES de qualquer script de página
             injectGMBridge();
 
             // 2. Baixa o manifesto
-            console.log('[🐘 Bootloader] Baixando manifesto:', MANIFEST_URL);
+            console.log('[Bootloader] Baixando manifesto:', MANIFEST_URL);
             const manifestText = await gmFetch(MANIFEST_URL);
             const manifest = JSON.parse(manifestText);
-            console.log(`[🐘 Bootloader] Manifesto OK — canal: ${manifest.channel}, versão: ${manifest.version}`);
+            console.log(`[Bootloader] Manifesto OK — canal: ${manifest.channel}, versão: ${manifest.version}`);
 
             // 3. Baixa o Runtime
             const runtimeUrl = resolveUrl(CDN_BASE, manifest.runtime.file);
-            console.log('[🐘 Bootloader] Baixando Runtime:', runtimeUrl);
+            console.log('[Bootloader] Baixando Runtime:', runtimeUrl);
             const runtimeCode = await gmFetch(runtimeUrl);
-            console.log(`[🐘 Bootloader] Runtime OK (${runtimeCode.length} bytes)`);
+            console.log(`[Bootloader] Runtime OK (${runtimeCode.length} bytes)`);
 
             // 4. Baixa cada módulo declarado no manifesto
             const moduleCodes = {};
@@ -121,12 +121,12 @@
 
             for (const [name, info] of moduleEntries) {
                 const url = resolveUrl(CDN_BASE, info.file);
-                console.log(`[🐘 Bootloader] Baixando módulo "${name}":`, url);
+                console.log(`[Bootloader] Baixando módulo "${name}":`, url);
                 try {
                     moduleCodes[name] = await gmFetch(url);
-                    console.log(`[🐘 Bootloader] Módulo "${name}" OK (${moduleCodes[name].length} bytes)`);
+                    console.log(`[Bootloader] Módulo "${name}" OK (${moduleCodes[name].length} bytes)`);
                 } catch (err) {
-                    console.error(`[🐘 Bootloader] ❌ Falha ao baixar módulo "${name}":`, err.message);
+                    console.error(`[Bootloader] ❌ Falha ao baixar módulo "${name}":`, err.message);
                     // Módulo falhou mas não interrompe o boot — Runtime lida com isso
                 }
             }
@@ -134,19 +134,19 @@
             // 5. Injeta o payload (manifest + código dos módulos) como script na página.
             //    Isso cruza a barreira sandbox→página de forma segura via JSON serializado.
             //    O Runtime vai detectar esse payload ao ser carregado e auto-inicializar.
-            console.log('[🐘 Bootloader] Injetando payload no DOM...');
+            console.log('[Bootloader] Injetando payload no DOM...');
             const payloadJson = JSON.stringify({ manifest, moduleCodes });
             injectScript(`window.__ElefanteBootPayload = ${payloadJson};`, 'elefante-payload');
 
             // 6. Injeta o Runtime — ele detecta __ElefanteBootPayload e executa bootFromModules
             //    automaticamente, tudo dentro do contexto da página (sem cruzar o sandbox).
-            console.log('[🐘 Bootloader] Injetando Runtime no DOM...');
+            console.log('[Bootloader] Injetando Runtime no DOM...');
             injectScript(runtimeCode, 'elefante-runtime');
 
-            console.log('[🐘 Bootloader] Runtime injetado. Boot em andamento na página...');
+            console.log('[Bootloader] Runtime injetado. Boot em andamento na página...');
 
         } catch (err) {
-            console.error('[🐘 Bootloader] ❌ FATAL:', err.message, err);
+            console.error('[Bootloader] ❌ FATAL:', err.message, err);
         }
     }
 
