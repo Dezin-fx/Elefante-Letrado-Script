@@ -102,6 +102,7 @@ Disponível para:
 
 - Abra o painel do Tampermonkey.
 - Clique em **Criar novo script**.
+- Apague o que estiver escrito
 - Cole o conteúdo do arquivo `Script.js`.
 - Salve.
 
