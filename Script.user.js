@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Elefante Assistente de Estudo
+// @name         Elefante Letrado Script
 // @namespace    https://github.com/Dezin-fx
 // @version      1.1.0
-// @description  Runtime modular do Elefante Assistente de Estudo
+// @description  Runtime modular do Elefante Letrado Script
 // @match        https://reader.elefanteletrado.com.br/*
 // @grant        GM_getValue
 // @grant        GM_setValue
@@ -12,7 +12,7 @@
 // ==/UserScript==
 
 /**
- * 🐘 Elefante Assistente de Estudo - Bootloader v1.1.0
+ * Elefante Letrado Script - Bootloader v1.1.0
  *
  * Responsabilidade única: baixar tudo e entregar ao Runtime.
  * Este script roda no sandbox privilegiado do Tampermonkey e tem acesso
@@ -31,7 +31,7 @@
     'use strict';
 
     const LOADER_VERSION = '1.1.0';
-    const CDN_BASE = 'https://cdn.jsdelivr.net/gh/Dezin-fx/Elefante-Assistente-Releases@main/';
+    const CDN_BASE = 'https://cdn.jsdelivr.net/gh/Dezin-fx/Elefante-Letrado-Script-Releases@main/';
     const MANIFEST_URL = CDN_BASE + 'channels/stable.json';
 
     // ------------------------------------------------------------------
