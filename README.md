@@ -11,7 +11,7 @@
 
 O desenvolvimento principal do **Elefante Letrado Script** continua sendo realizado neste repositório, utilizando o arquivo [Script.js](https://github.com/Dezin-fx/Elefante-Letrado-Script/blob/main/Script.js)
 
-O arquivo [Script.user.js](https://github.com/Dezin-fx/Elefante-Letrado-Script/blob/main/Script.user.js) e o repositório [Elefante-Letradp-Script-Releases](https://github.com/Dezin-fx/Elefante-Letrado-Script-Releases) 
+O arquivo [Script.user.js](https://github.com/Dezin-fx/Elefante-Letrado-Script/blob/main/Script.user.js) e o repositório [Elefante-Letrado-Script-Releases](https://github.com/Dezin-fx/Elefante-Letrado-Script-Releases) 
 fazem parte de uma **prova de conceito (POC)** para testar uma nova arquitetura modular de carregamento dinâmico do userscript.
 
 Essa nova arquitetura tem como objetivo futuro permitir:
