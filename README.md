@@ -54,7 +54,7 @@ A migração para a arquitetura modular será realizada gradualmente após a con
 ---
 #  Sobre o projeto
 
-O **Elefante Letrado Script** é um userscript para **Tampermonkey** que adiciona recursos de automação e assistência à plataforma Elefante Letrado.
+O **Elefante Letrado Script** é um userscript para **Tampermonkey** que adiciona recursos de automação e resposta de questões à plataforma Elefante Letrado.
 
 O script oferece ferramentas para automatizar a navegação durante a leitura e, opcionalmente, integrar modelos de Inteligência Artificial através do OpenRouter para fazer as atividades.
 
