@@ -56,7 +56,7 @@ A migração para a arquitetura modular será realizada gradualmente após a con
 
 O **Elefante Letrado Automático** é um userscript para **Tampermonkey** que adiciona recursos de automação e assistência à plataforma Elefante Letrado.
 
-O script oferece ferramentas para automatizar a navegação durante a leitura e, opcionalmente, integrar modelos de Inteligência Artificial através do OpenRouter para auxiliar na interpretação de atividades.
+O script oferece ferramentas para automatizar a navegação durante a leitura e, opcionalmente, integrar modelos de Inteligência Artificial através do OpenRouter para fazer as atividades.
 
 O uso da IA é totalmente opcional. O script funciona normalmente apenas com os recursos de automação caso o usuário prefira não utilizar nenhuma API externa.
 
