@@ -9,7 +9,7 @@
 
 > **O `Script.user.js` e o repositório `Elefante-Assistente-Releases` estão atualmente em fase de testes e NÃO representam a versão principal ou estável do projeto.**
 
-O desenvolvimento principal do **Elefante Assistente de Estudo** continua sendo realizado neste repositório, utilizando o arquivo [Script.js](https://github.com/Dezin-fx/Elefante-Letrado-Script/blob/main/Script.js)
+O desenvolvimento principal do **Elefante Letrado Script** continua sendo realizado neste repositório, utilizando o arquivo [Script.js](https://github.com/Dezin-fx/Elefante-Letrado-Script/blob/main/Script.js)
 
 O arquivo [Script.user.js](https://github.com/Dezin-fx/Elefante-Letrado-Script/blob/main/Script.user.js) e o repositório [Elefante-Assistente-Releases](https://github.com/Dezin-fx/Elefante-Assistente-Releases) 
 fazem parte de uma **prova de conceito (POC)** para testar uma nova arquitetura modular de carregamento dinâmico do userscript.
@@ -30,7 +30,7 @@ Porém, neste momento, esses componentes ainda estão em desenvolvimento e podem
 - mudanças de estrutura sem aviso prévio;
 - perda de configurações ou dados locais durante testes.
 
-**Não utilize o `Script.user.js` ou o repositório `Elefante-Assistente-Releases` como versão definitiva.**
+**Não utilize o `Script.user.js` ou o repositório `-Assistente-Releases` como versão definitiva.**
 
 Caso esteja procurando a versão funcional e em desenvolvimento ativo, utilize o código presente neste repositório, principalmente o arquivo `script.js`
 
@@ -46,7 +46,7 @@ A migração para a arquitetura modular será realizada gradualmente após a con
 🟡 `Script.user.js`  
 → Loader experimental da arquitetura modular.
 
-🟡 `Elefante-Assistente-Releases`  
+🟡 `-Assistente-Releases`  
 → Repositório experimental para distribuição de módulos e versões.
 
 🔴 Nenhum dos componentes modulares deve ser considerado uma release estável neste momento.
@@ -54,7 +54,7 @@ A migração para a arquitetura modular será realizada gradualmente após a con
 ---
 #  Sobre o projeto
 
-O **Elefante Letrado Automático** é um userscript para **Tampermonkey** que adiciona recursos de automação e assistência à plataforma Elefante Letrado.
+O **Elefante Letrado Script** é um userscript para **Tampermonkey** que adiciona recursos de automação e assistência à plataforma Elefante Letrado.
 
 O script oferece ferramentas para automatizar a navegação durante a leitura e, opcionalmente, integrar modelos de Inteligência Artificial através do OpenRouter para fazer as atividades.
 
