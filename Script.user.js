@@ -7,6 +7,7 @@
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM_xmlhttpRequest
+// @grant        unsafeWindow
 // @connect      cdn.jsdelivr.net
 // @connect      openrouter.ai
 // ==/UserScript==
@@ -20,7 +21,7 @@
  * portanto TODO download de rede acontece aqui.
  *
  * Fluxo:
- *   1. Injeta __ElefanteGM no window (para Storage: getValue/setValue)
+ *   1. Injeta __ElefanteGM no window e unsafeWindow (para Storage: getValue/setValue)
  *   2. Baixa o manifesto (stable.json)
  *   3. Baixa o código do Runtime
  *   4. Baixa o código de cada módulo declarado no manifesto
@@ -31,28 +32,25 @@
     'use strict';
 
     const LOADER_VERSION = '1.1.0';
-    const CDN_BASE = 'https://cdn.jsdelivr.net/gh/Dezin-fx/Elefante-Assistente-Releases@main/';
+    const CDN_BASE = 'https://cdn.jsdelivr.net/gh/Dezin-fx/Elefante-Letrado-Script-Releases@main/';
     const MANIFEST_URL = CDN_BASE + 'channels/stable.json';
 
     // ------------------------------------------------------------------
     // GM Bridge — expõe getValue/setValue no window para que o Runtime
     // e os módulos (injetados no DOM) possam ler/salvar configurações.
-    // xmlhttpRequest NÃO é exposto aqui: o bootloader faz todos os fetches.
     // ------------------------------------------------------------------
     function injectGMBridge() {
-        // Atribuímos diretamente no window do sandbox.
-        // No Tampermonkey, window é um proxy que reflete para o page window,
-        // então os scripts injetados no DOM conseguem ler window.__ElefanteGM.
-        window.__ElefanteGM = {
+        const bridge = {
             getValue:  (key, def) => GM_getValue(key, def),
             setValue:  (key, val) => GM_setValue(key, val),
-            // xmlhttpRequest fica aqui apenas como trava de segurança;
-            // o módulo AI não deve precisar usar — todas as requisições
-            // de rede passarão pelo bootloader no futuro.
             xmlhttpRequest: (details) => GM_xmlhttpRequest(details)
         };
-        console.log('[🐘 Bootloader] GM Bridge injetada no window.');
-        console.log("[Bootloader] __ElefanteGM =", window.__ElefanteGM);
+
+        window.__ElefanteGM = bridge;
+        if (typeof unsafeWindow !== 'undefined') {
+            unsafeWindow.__ElefanteGM = bridge;
+        }
+        console.log('[🐘 Bootloader] GM Bridge injetada em window e unsafeWindow.');
     }
 
     // ------------------------------------------------------------------
