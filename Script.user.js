@@ -51,7 +51,8 @@
             // de rede passarão pelo bootloader no futuro.
             xmlhttpRequest: (details) => GM_xmlhttpRequest(details)
         };
-        console.log('[Bootloader] GM Bridge injetada no window.');
+        console.log("[Bootloader] __ElefanteGM =", window.__ElefanteGM);
+        console.log("[Bootloader] window =", window);
     }
 
     // ------------------------------------------------------------------
