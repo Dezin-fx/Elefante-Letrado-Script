@@ -52,6 +52,7 @@
             xmlhttpRequest: (details) => GM_xmlhttpRequest(details)
         };
         console.log('[🐘 Bootloader] GM Bridge injetada no window.');
+        console.log("[Bootloader] __ElefanteGM =", window.__ElefanteGM);
     }
 
     // ------------------------------------------------------------------
