@@ -103,13 +103,14 @@
             injectGMBridge();
 
             // 2. Baixa o manifesto
-            console.log('[Bootloader] Baixando manifesto:', MANIFEST_URL);
-            const manifestText = await gmFetch(MANIFEST_URL);
+            const manifestUrlWithCacheBust = MANIFEST_URL + '?t=' + Date.now();
+            console.log('[Bootloader] Baixando manifesto:', manifestUrlWithCacheBust);
+            const manifestText = await gmFetch(manifestUrlWithCacheBust);
             const manifest = JSON.parse(manifestText);
             console.log(`[Bootloader] Manifesto OK — canal: ${manifest.channel}, versão: ${manifest.version}`);
 
             // 3. Baixa o Runtime
-            const runtimeUrl = resolveUrl(CDN_BASE, manifest.runtime.file);
+            const runtimeUrl = resolveUrl(CDN_BASE, manifest.runtime.file) + '?t=' + Date.now();
             console.log('[Bootloader] Baixando Runtime:', runtimeUrl);
             const runtimeCode = await gmFetch(runtimeUrl);
             console.log(`[Bootloader] Runtime OK (${runtimeCode.length} bytes)`);
@@ -119,7 +120,7 @@
             const moduleEntries = Object.entries(manifest.modules || {});
 
             for (const [name, info] of moduleEntries) {
-                const url = resolveUrl(CDN_BASE, info.file);
+                const url = resolveUrl(CDN_BASE, info.file) + '?t=' + Date.now();
                 console.log(`[Bootloader] Baixando módulo "${name}":`, url);
                 try {
                     moduleCodes[name] = await gmFetch(url);
