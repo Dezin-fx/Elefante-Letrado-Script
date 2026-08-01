@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Elefante Letrado Script
 // @namespace    https://github.com/Dezin-fx
-// @version      1.1.0
+// @version      1.1.1
 // @description  Runtime modular do Elefante Letrado Script
 // @match        https://reader.elefanteletrado.com.br/*
 // @grant        GM_getValue
@@ -9,6 +9,7 @@
 // @grant        GM_xmlhttpRequest
 // @grant        unsafeWindow
 // @connect      cdn.jsdelivr.net
+// @connect      raw.githubusercontent.com
 // @connect      openrouter.ai
 // ==/UserScript==
 
