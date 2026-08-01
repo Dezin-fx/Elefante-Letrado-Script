@@ -31,9 +31,9 @@
 (function () {
     'use strict';
 
-    const LOADER_VERSION = '1.1.0';
+    const LOADER_VERSION = '1.1.1';
     const CDN_BASE = 'https://cdn.jsdelivr.net/gh/Dezin-fx/Elefante-Letrado-Script-Releases@main/';
-    const MANIFEST_URL = CDN_BASE + 'channels/stable.json';
+    const MANIFEST_URL = 'https://raw.githubusercontent.com/Dezin-fx/Elefante-Letrado-Script-Releases/main/channels/stable.json';
 
     // ------------------------------------------------------------------
     // GM Bridge — expõe getValue/setValue no window para que o Runtime
