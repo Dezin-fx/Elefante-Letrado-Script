@@ -134,7 +134,7 @@ Quando desejado, o script utiliza a API da **OpenRouter**.
 ## Para utilizar IA:
 
 1. Crie uma conta no [OpenRouter](https://openrouter.ai).
-2. Gere uma API Key em [OpenRouter Key](https://openrouter.ai/workspaces/default/keys).
+2. Gere uma API Key com nome de sua preferência em [OpenRouter Key](https://openrouter.ai/workspaces/default/keys).
 3. Na primeira execução do script, cole a chave quando o painel solicitar.
 
 A API Key fica armazenada apenas localmente pelo Tampermonkey e pode ser alterada ou removida a qualquer momento através da opção de reconfiguração do script.
