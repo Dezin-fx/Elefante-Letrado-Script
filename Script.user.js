@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Elefante Letrado Script
-// @namespace    https://github.com/Dezin-fx
+// @namespace    https://github.com/Sply-Dev
 // @version      1.1.1
 // @description  Runtime modular do Elefante Letrado Script
 // @match        https://reader.elefanteletrado.com.br/*
@@ -33,8 +33,8 @@
     'use strict';
 
     const LOADER_VERSION = '1.1.1';
-    const CDN_BASE = 'https://cdn.jsdelivr.net/gh/Dezin-fx/Elefante-Letrado-Script-Releases@main/';
-    const MANIFEST_URL = 'https://raw.githubusercontent.com/Dezin-fx/Elefante-Letrado-Script-Releases/main/channels/stable.json';
+    const CDN_BASE = 'https://cdn.jsdelivr.net/gh/Sply-Dev/Elefante-Letrado-Script-Releases@main/';
+    const MANIFEST_URL = 'https://raw.githubusercontent.com/Sply-Dev/Elefante-Letrado-Script-Releases/main/channels/stable.json';
 
     // ------------------------------------------------------------------
     // GM Bridge — expõe getValue/setValue no window para que o Runtime
